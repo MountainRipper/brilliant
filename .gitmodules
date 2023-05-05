@@ -1,0 +1,6 @@
+[submodule "sdmp"]
+	path = sdmp
+	url = https://github.com/MountainRipper/sdmp.git
+[submodule "vgfx"]
+	path = vgfx
+	url = https://github.com/MountainRipper/vgfx.git
