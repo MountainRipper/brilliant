@@ -52,7 +52,8 @@ link_directories("${THIRD_PARTY_TARGET}/lib")
 
 
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sdmp)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vgfx)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/plugins)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/samples/hello_vgfx)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/brillant)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/brillant-v)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
