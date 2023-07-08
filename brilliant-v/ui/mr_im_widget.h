@@ -7,6 +7,7 @@
 #include <map>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 
 #if defined(MR_UI_WITH_TIO)
 #include <tio/tio_types.h>
@@ -14,6 +15,10 @@
 
 namespace mrui
 {
+
+void DragScrollCurrentWindow(bool &draged, int mouse_button = ImGuiMouseButton_Left, float release_speed = 1.0, float decelerate_factor = 0.9, bool scroll_y = true, bool scroll_x = false);
+void Image(const char* image,const char* sub_image,const ImVec2& size, const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4& border_col = ImVec4(0, 0, 0, 0));
+bool ImageButton(const char* str_id, const char* image,const char* sub_image, const ImVec2& size, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 
 struct ImguiFontResource
 {
@@ -146,13 +151,37 @@ private:
     ImVec2 windowSize_;
 };
 
-template<typename Data>
-class GridView{
-    typedef std::function<int32_t(Data& data,int index,int width,int height)> draw_callback;
-    GridView(int32_t item_width,int32_t item_height,int32_t space);
+class Panel{
+public:
+    Panel(int width,int height){
+        rect_.Min = ImGui::GetCursorPos();
+        rect_.Max = rect_.Min + ImVec2(width,height);
+    }
 
-    int32_t draw(std::vector<Data &> *datas, draw_callback drawer)
+    ImRect rect_;
+};
+
+template<typename Data>
+class ListView{
+public:
+    typedef std::function<int32_t(ListView<Data>& view,Data& data,int index,int width,int height)> draw_callback;
+    ListView(){
+        char temp[64];
+        sprintf(temp,"mrui_listview_%p",this);
+        id_ =  temp;
+    }
+
+    int32_t draw(std::vector<Data> &datas, draw_callback drawer,int32_t width,int32_t height,int32_t item_height,int32_t space = 0)
     {
+
+        ImGui::BeginChild(id_.c_str(),ImVec2(width,height),true);
+        int index = 0;
+        for(auto& item : datas){
+            drawer(*this,item,index,width,item_height);
+            index++;
+        }
+        DragScrollCurrentWindow(draded_);
+        ImGui::EndChild();
         return 0;
     }
 
@@ -160,7 +189,11 @@ class GridView{
     {
         return 0;
     }
+public:
+    int32_t current_index_ = -1;
+    bool draded_ = false;
 private:
+    std::string id_;
     std::vector<Data&>* data_;
     int32_t width_;
     int32_t height_;
@@ -193,8 +226,6 @@ private:
     static std::map<std::string,Image> images_;
 };
 
-void Image(const char* image,const char* sub_image,const ImVec2& size, const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4& border_col = ImVec4(0, 0, 0, 0));
-bool ImageButton(const char* str_id, const char* image,const char* sub_image, const ImVec2& size, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 
 class VideoCutTimeline{
 public:

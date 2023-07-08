@@ -1,5 +1,6 @@
 #include "mr_im_widget.h"
 #include <imgui/imgui_internal.h>
+#include <queue>
 
 #if defined(MR_UI_WITH_TIO)
 #include <tio/tio_hardware_graphic.h>
@@ -7,6 +8,9 @@
 
 using namespace ImGui;
 namespace mrui {
+
+#define ARRARY_SUM(arr,count,sum) {size_t c = count;while((c--) > 0) sum += arr[c];}
+#define ARRARY_SUM_CLEAR(arr,count,sum) {size_t c = count;while((c--) > 0) sum += arr[c]; arr[c]=0;}
 
 std::map<std::string,TextureHolder::Image> TextureHolder::images_;
 
@@ -202,6 +206,94 @@ bool ImageButton(const char* str_id, const char* image,const char* sub_image, co
 
     return ImGui::ImageButton(str_id,image_info.texture,size,image_info.top_left(),image_info.bottom_right(),bg_col,tint_col);
 }
+
+#define kDragDeltaSumSize 3
+void DragScrollCurrentWindow(bool& draged, int mouse_button, float release_speed, float decelerate_factor, bool scroll_y, bool scroll_x)
+{
+    ImVec2 mouse_delta = ImGui::GetIO().MouseDelta;
+    mouse_delta.x *= -1;
+    mouse_delta.y *= -1;
+
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    ImGuiWindow* window = g.CurrentWindow;
+
+    struct DragInfo{
+        bool draged = false;
+        float last_delta_x = 0;
+        float last_delta_y = 0;
+
+        float delta_x_sum_[kDragDeltaSumSize] = {0};
+        float delta_y_sum_[kDragDeltaSumSize] = {0};
+        int delta_x_sum_index_ = 0;
+        int delta_y_sum_index_ = 0;
+    };
+
+    static std::map<ImGuiID,DragInfo> window_drag_info;
+    if(window_drag_info.find(window->ID) == window_drag_info.end()){
+        window_drag_info[window->ID] = DragInfo();
+    }
+    DragInfo& drag_info = window_drag_info[window->ID];
+
+    bool hovered = false;
+    bool held = false;
+    ImGuiButtonFlags button_flags = (mouse_button == 0) ? ImGuiButtonFlags_MouseButtonLeft : (mouse_button == 1) ? ImGuiButtonFlags_MouseButtonRight : ImGuiButtonFlags_MouseButtonMiddle;
+    if (g.HoveredId == 0) // If nothing hovered so far in the frame (not same as IsAnyItemHovered()!)
+        ImGui::ButtonBehavior(window->Rect(), window->GetID("##scrolldraggingoverlay"), &hovered, &held, button_flags);
+
+    held = ImGui::IsMouseHoveringRect(window->Rect().GetTL(),window->Rect().GetBR());
+    bool mouse_down = ImGui::GetIO().MouseDown[mouse_button];
+
+    bool held_current = held & mouse_down;
+    if (held_current && scroll_x && mouse_delta.x != 0.0f){
+        ImGui::SetScrollX(window, window->Scroll.x + mouse_delta.x);
+        if(drag_info.draged == false && abs(mouse_delta.x) > 2)
+            drag_info.draged = true;
+    }
+    if (held_current && scroll_y && mouse_delta.y != 0.0f){
+        ImGui::SetScrollY(window, window->Scroll.y + mouse_delta.y);
+        if(drag_info.draged == false && abs(mouse_delta.y) > 2)
+            drag_info.draged = true;
+    }
+
+    drag_info.delta_x_sum_[(drag_info.delta_x_sum_index_++)%kDragDeltaSumSize] = mouse_delta.x;
+    drag_info.delta_y_sum_[(drag_info.delta_y_sum_index_++)%kDragDeltaSumSize] = mouse_delta.y;
+
+    if(ImGui::GetIO().MouseReleased[mouse_button] && held){
+        drag_info.draged = false;
+        float sum = 0;
+        ARRARY_SUM_CLEAR(drag_info.delta_x_sum_,kDragDeltaSumSize,sum);
+        drag_info.last_delta_x = sum / kDragDeltaSumSize * release_speed;
+
+        sum = 0;
+        ARRARY_SUM_CLEAR(drag_info.delta_y_sum_,kDragDeltaSumSize,sum);
+        drag_info.last_delta_y = sum / kDragDeltaSumSize * release_speed;
+
+
+    }
+
+    if(drag_info.last_delta_y != 0){
+        drag_info.last_delta_y *= decelerate_factor;
+        if(abs(drag_info.last_delta_y) < 1)
+            drag_info.last_delta_y = 0;
+        ImGui::SetScrollY(window, window->Scroll.y + drag_info.last_delta_y);
+
+        if(window->Scroll.y == 0 || window->Scroll.y >= window->ScrollMax.y || mouse_down){
+            drag_info.last_delta_y = 0;
+        }
+    }
+
+    if(drag_info.last_delta_x != 0){
+        drag_info.last_delta_x *= decelerate_factor;
+        if(abs(drag_info.last_delta_x) < 1)
+            drag_info.last_delta_x = 0;
+        ImGui::SetScrollX(window, window->Scroll.x + drag_info.last_delta_x);
+        if(window->Scroll.x == 0 || window->Scroll.x >= window->ScrollMax.x || mouse_down){
+            drag_info.last_delta_x = 0;
+        }
+    }
+    draged = drag_info.draged;
+}
+
 #endif
 
 }//namespace mountain-ripper

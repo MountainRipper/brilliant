@@ -1,5 +1,6 @@
 #ifndef PLAYEREXAMPLE_H
 #define PLAYEREXAMPLE_H
+#include "brilliant-v/ui/mr_im_widget.h"
 #include <tio/tio_types.h>
 #include <mutex>
 #include <queue>
@@ -35,9 +36,20 @@ private:
     bool resized_ = true;
 
 
+    struct GridData
+    {
+        int index = 0;
+        std::string name_;
+    };
 
+    ImFont* noto_font_ = nullptr;
+
+    mrui::ListView<GridData> grid_;
+    std::vector<GridData> grid_data_;
     std::string test_bundle_image_;
     bool button_window_draged_ = false;
+
+
 };
 
 #endif // PLAYEREXAMPLE_H
