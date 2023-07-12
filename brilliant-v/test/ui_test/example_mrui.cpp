@@ -1,4 +1,3 @@
-#include <unistd.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <filesystem>
 #include <glad/gl.h>
@@ -10,13 +9,9 @@
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/fmt/chrono.h>
 #include <SDL2/SDL.h>
-#include "../../ui/mr_im_widget.h"
 #include "example_mrui.h"
 
 #include <ttf/ttf_notosans.h>
-
-
-
 
 /*
  *Yoya :
@@ -28,6 +23,7 @@ using namespace mr::tio;
 
 MrUIExample::MrUIExample()
 {
+
 }
 
 
@@ -51,6 +47,7 @@ int32_t MrUIExample::on_init(void *window,int width, int height)
 
     const std::vector<std::string> names =  {"Flavio","Nicolás","Üzeyir","Йордан","ГЕОРГИЕВА","Διαμαντόπουλος","Csongrádi Ildikó",
                                   "Đoàn Diệu","संसाधन ओओर","Надежда Владимиров","张三","李四","蔡徐坤","鸡你太美"};
+
     for (int index = 0; index < 100; ++index) {
 
         GridData data{index,names[index%names.size()]};
@@ -64,6 +61,8 @@ int32_t MrUIExample::on_init(void *window,int width, int height)
     icons_config.MergeMode = true;
     static const ImWchar ranges[] = { 0x0001, 0xFFFF, 0 };
     fonts->AddFontFromMemoryCompressedBase85TTF(notosans_compressed_data_base85,24,&icons_config,ranges);
+
+    yoga_layout_.load("resources/main.lua");
     return 0;
 }
 
@@ -114,7 +113,6 @@ void MrUIExample::command(std::string command)
 
 void MrUIExample::render_ui()
 {
-
     static bool first = true;
     if(first){
         first = false;

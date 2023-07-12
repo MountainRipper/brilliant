@@ -5,6 +5,8 @@
 #include <mutex>
 #include <queue>
 #include <mrcommon/sdl_runner.h>
+#include <mr_im_widget.h>
+#include <yoya_lua_layout_context.h>
 using namespace mr;
 
 
@@ -49,6 +51,7 @@ private:
     std::string test_bundle_image_;
     bool button_window_draged_ = false;
 
+    YogaLuaLayoutContext yoga_layout_;
 
 };
 

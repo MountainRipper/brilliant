@@ -64,6 +64,9 @@ if(NOT DEFINED MR_THIRD_PARTY_ROOT)
     link_directories("${MR_THIRD_PARTY_TARGET}/lib")
     SET(MR_SEARCH_LIB_PATHS "${MR_THIRD_PARTY_TARGET}/lib")
 endif()
+
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 message(STATUS "INFO:BRILLIANT MAKE FOR OS:${MR_TARGET_OS} ARCH:${MR_TARGET_ARCH} SYSROOT:${CMAKE_SYSROOT}")
 message(STATUS "INFO:BRILLIANT MAKE USE PLATFORM THIRD-PARTY LIBS:${MR_SEARCH_LIB_PATHS}")
 #######################arch and os detect end#######################
