@@ -62,7 +62,10 @@ int32_t MrUIExample::on_init(void *window,int width, int height)
     static const ImWchar ranges[] = { 0x0001, 0xFFFF, 0 };
     fonts->AddFontFromMemoryCompressedBase85TTF(notosans_compressed_data_base85,24,&icons_config,ranges);
 
-    yoga_layout_.load("resources/main.lua");
+    yoga_layout_context_.load("/home/xuwei/work/projects/MountainRipper/brilliant/brilliant-v/test/ui_test/resources/main.lua");
+    yoga_main_ui_ = yoga_layout_context_.get_layout("org.mr.brilliant.MainUI");
+    yoga_main_ui_->set_renderer(&yoga_render_);
+
     return 0;
 }
 
@@ -78,6 +81,8 @@ int32_t MrUIExample::on_frame()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     render_ui();
+    yoga_main_ui_->render_frame();
+
     return 0;
 }
 
@@ -111,14 +116,35 @@ void MrUIExample::command(std::string command)
 
 }
 
+unsigned long GetTickCount()
+
+{
+
+    struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    return (ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
+
+}
+void ImRotateDemo()
+{
+    mrui::ImRotateStart();
+    ImGui::TextColored(ImVec4(1,1,0,0.5), __FUNCTION__);
+    mrui::ImRotateEnd(0.0005f*::GetTickCount());
+
+    mrui::ImRotateStart();
+    ImGui::Text(__FUNCTION__);ImGui::SameLine();
+    ImGui::Text(ICON_FA_CABLE_CAR);
+    mrui::ImRotateEnd(0.01f*::GetTickCount()*!ImGui::IsItemHovered());
+}
+
 void MrUIExample::render_ui()
 {
     static bool first = true;
     if(first){
         first = false;
-
     }
-
     ImGui::Begin("Button Panel",NULL);
 
     ImGui::BeginChild("Bt",ImVec2(800,800),true,ImGuiWindowFlags_HorizontalScrollbar);
@@ -126,12 +152,13 @@ void MrUIExample::render_ui()
     ImGui::PushStyleColor(ImGuiCol_Button,0);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImGui::ColorConvertFloat4ToU32(ImVec4(0.8,0.8,0.8,0.5)));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImGui::ColorConvertFloat4ToU32(ImVec4(0.8,0.8,0.8,0.8)));
+    float a = 0.01;
     for(auto& image : images){
         bool clicked = mrui::ImageButton(image.first.c_str(),image.first.c_str(),NULL,image.second.size);
 
         ImGui::SameLine();
-        mrui::Image(image.first.c_str(),NULL,image.second.size);
-
+        mrui::Image(image.first.c_str(),NULL,image.second.size,ImVec4(1,1,1,a));
+        a += 0.02;
         if(clicked ){
             if(!button_window_draged_){
                 MR_INFO("Button {} clicked",image.first);
@@ -141,6 +168,7 @@ void MrUIExample::render_ui()
     ImGui::PopStyleColor(3);
     mrui::DragScrollCurrentWindow(button_window_draged_,ImGuiMouseButton_Left,1,0.9,true,true);
     ImGui::EndChild();
+
     ImGui::SameLine();
 
     if(noto_font_)
@@ -162,6 +190,7 @@ void MrUIExample::render_ui()
 
             ImGui::SameLine();
             ImGui::SetCursorPosX(width - ImGui::CalcTextSize(data.name_.c_str()).x - 40);
+
             if(ImGui::ButtonEx(data.name_.c_str()) && !view.draded_){
                 clicked_index = index;
             }
@@ -185,7 +214,7 @@ void MrUIExample::render_ui()
             ImGui::SetCursorPosX(0);
             ImGui::SetCursorPosY(start_y);
             if(view.current_index_ == data.index){
-                mrui::Image(test_bundle_image_.c_str(),"select-border.png",ImVec2(width,end_y-start_y));ImGui::SameLine();
+                mrui::Image("select-border.png",NULL,ImVec2(width,end_y-start_y));ImGui::SameLine();
             }
             ImGui::SetCursorPosY(end_y);
             return 0;
@@ -199,5 +228,11 @@ void MrUIExample::render_ui()
         if(grid_.current_index_ == clicked_index)
             grid_.current_index_ = -1;
     }
+
+    ImRotateDemo();
+
     ImGui::End();
+
+    yoga_main_ui_->render_frame();
+
 }

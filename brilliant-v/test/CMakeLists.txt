@@ -10,7 +10,7 @@ add_executable(ui_test ${SOURCE_UI_TEST})
 target_compile_definitions(ui_test PRIVATE -DMR_UI_WITH_TIO=1)
 
 if(${MR_TARGET_OS} MATCHES "linux")
-    target_link_libraries(ui_test PRIVATE mrbundle mrcommon mrui textureio SDL2)
+    target_link_libraries(ui_test PRIVATE mrbundle mrcommon mrui textureio SDL2 luajit)
 elseif(${MR_TARGET_OS} MATCHES "windows")
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         set(MR_TARGET_OS "mingw")

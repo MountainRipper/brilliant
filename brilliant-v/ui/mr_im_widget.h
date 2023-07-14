@@ -16,6 +16,11 @@
 namespace mrui
 {
 
+
+void ImRotateStart();
+ImVec2 ImRotationCenter();
+void ImRotateEnd(float rad, ImVec2 center = ImRotationCenter());
+
 void DragScrollCurrentWindow(bool &draged, int mouse_button = ImGuiMouseButton_Left, float release_speed = 1.0, float decelerate_factor = 0.9, bool scroll_y = true, bool scroll_x = false);
 void Image(const char* image,const char* sub_image,const ImVec2& size, const ImVec4& tint_col = ImVec4(1, 1, 1, 1), const ImVec4& border_col = ImVec4(0, 0, 0, 0));
 bool ImageButton(const char* str_id, const char* image,const char* sub_image, const ImVec2& size, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));

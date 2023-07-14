@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file( GLOB SOURCE_UI *.h *.cpp)
-file( GLOB SOURCE_YOGA yoga/*.h yoga/*.c*)
+file( GLOB SOURCE_YOGA yoga/*.h yoga/*.c* yoga/event/*.h yoga/event/*.c*)
 
 add_library(mrui STATIC ${SOURCE_UI} ${SOURCE_YOGA})
 target_include_directories(mrui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

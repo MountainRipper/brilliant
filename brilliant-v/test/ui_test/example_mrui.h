@@ -7,6 +7,8 @@
 #include <mrcommon/sdl_runner.h>
 #include <mr_im_widget.h>
 #include <yoya_lua_layout_context.h>
+#include <imgui_yoga_render.h>
+
 using namespace mr;
 
 
@@ -51,8 +53,9 @@ private:
     std::string test_bundle_image_;
     bool button_window_draged_ = false;
 
-    YogaLuaLayoutContext yoga_layout_;
-
+    YogaLuaLayoutContext yoga_layout_context_;
+    YogaLuaLayout* yoga_main_ui_;
+    ImGuiYogaRender yoga_render_;
 };
 
 #endif // PLAYEREXAMPLE_H

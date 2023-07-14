@@ -157,6 +157,11 @@ TextureHolder::Image TextureHolder::get(const std::string &name)
 int32_t TextureHolder::add_image(const std::string & name, Image image)
 {
     images_[name] = image;
+    auto pos = name.find_first_of(':') + 1;
+    if( pos != std::string::npos && pos != name.size()){
+        std::string sub_name(name.begin()+pos,name.end());
+        images_[sub_name] = image;
+    }
     return 0;
 }
 
@@ -292,6 +297,33 @@ void DragScrollCurrentWindow(bool& draged, int mouse_button, float release_speed
         }
     }
     draged = drag_info.draged;
+}
+
+int g_rotation_start_index;
+void ImRotateStart()
+{
+    g_rotation_start_index = ImGui::GetWindowDrawList()->VtxBuffer.Size;
+}
+
+ImVec2 ImRotationCenter()
+{
+    ImVec2 l(FLT_MAX, FLT_MAX), u(-FLT_MAX, -FLT_MAX); // bounds
+
+    const auto& buf = ImGui::GetWindowDrawList()->VtxBuffer;
+    for (int i = g_rotation_start_index; i < buf.Size; i++)
+        l = ImMin(l, buf[i].pos), u = ImMax(u, buf[i].pos);
+
+    return ImVec2((l.x+u.x)/2, (l.y+u.y)/2); // or use _ClipRectStack?
+}
+
+void ImRotateEnd(float rad, ImVec2 center)
+{
+    float s=sin(rad), c=cos(rad);
+    center = ImRotate(center, s, c) - center;
+
+    auto& buf = ImGui::GetWindowDrawList()->VtxBuffer;
+    for (int i = g_rotation_start_index; i < buf.Size; i++)
+        buf[i].pos = ImRotate(buf[i].pos, s, c) - center;
 }
 
 #endif
