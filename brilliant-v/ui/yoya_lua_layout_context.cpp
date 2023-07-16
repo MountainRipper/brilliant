@@ -1,6 +1,7 @@
 #include <sstream>
 #include <sol/sol.hpp>
 #include <mrcommon/filesystem.h>
+#include <mrcommon/logger.h>
 #include <filesystem>
 #include <yoga/Yoga.h>
 #include <yoga/YGNode.h>
@@ -49,55 +50,27 @@ int32_t YogaLuaLayoutContext::load(const std::string &ui_script)
 
 YogaLuaLayout *YogaLuaLayoutContext::get_layout(const std::string &id)
 {
+    MR_TIMER_NEW(t);
     YogaLuaLayout* layout = nullptr;
     if(layouts_origin_.find(id) == layouts_origin_.end()){
         sol::protected_function creator = (*lua_)["createWidget"];
         if(creator){
             sol::optional<sol::table> object = creator(id);
             if(object != sol::nullopt){
-                sol::optional<sol::table> layout_table = object.value()["layout"];
-                if(layout_table != sol::nullopt){
-                    layout = new YogaLuaLayout(layout_table.value());
-                    parse_layouts(layout_table.value(),*layout);
+                sol::optional<sol::table> ui_table = object.value()["ui"];
+                if(ui_table != sol::nullopt){
+                    //current use ui in owner object
+                    //TODO: if object(logic) and ui define separated is need
+                    layout = new YogaLuaLayout(object.value(),ui_table.value());
                 }
+                object.value()["parseNamedElements"](object.value());
             }
         }
     }
 
-    YGNodeCalculateLayout(layout->node_, 1000, 1000, YGDirectionLTR);
+    layout->refresh_position_all();
+    layout->refresh_named_elements();
 
-    std::function<void(YogaElement& element,float parent_x,float parent_y)> refresher;
-
-    refresher = [&refresher](YogaElement& element,float parent_x,float parent_y)->void{
-        element.refresh_position(parent_x,parent_y);
-        for(auto& item : element.children_){
-            refresher(item,element.left_,element.top_);
-        }
-    };
-
-    refresher(*layout,0,0);
-
+    MR_INFO("parse and calc use {} ms",MR_TIMER_MS(t));
     return layout;
-}
-
-int32_t YogaLuaLayoutContext::parse_layouts(sol::table &widget_table,YogaElement& element_self)
-{
-    sol::optional<sol::table> elements = widget_table["elements"];
-    if(elements != sol::nullopt){
-
-        for(const auto &it : elements.value()){
-            sol::lua_value element = it.second;
-            auto type = element.value().get_type();
-            if(type ==sol::type::table){
-                sol::table element_table = element.as<sol::table>();
-                YogaElement element_clild(element_table);
-                parse_layouts(element_table,element_clild);
-
-                element_self.push_element(element_clild);
-            }
-        }
-    }
-
-
-    return 0;
 }

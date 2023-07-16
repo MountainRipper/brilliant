@@ -4,7 +4,7 @@
 #include "yoga/YGNode.h"
 #include "yoga/Yoga.h"
 #include <sol/sol.hpp>
-
+#include <mrcommon/logger.h>
 
 const std::map<std::string,YGFlexDirection> flex_direction_map = {
     {"column",          YGFlexDirectionColumn},
@@ -64,8 +64,8 @@ inline YGValue LUA_YG_VALUE(sol::table &table, std::string_view name){
     return value;
 }
 
-ElementPropertyValue lua_get_style_value(sol::lua_value& value){
-    ElementPropertyValue property_value;
+StyleValue lua_get_style_value(sol::lua_value& value){
+    StyleValue property_value;
     switch (value.value().get_type()) {
     case sol::type::number:property_value = value.as<double>();break;
     case sol::type::string:property_value = value.as<std::string>();break;
@@ -184,22 +184,35 @@ inline T MAP_GET_VALUE(const std::map<K,T>& the_map ,const K& key,T default_valu
 }
 
 
-YogaElement::YogaElement(sol::table &lua_var)
+YogaElement::YogaElement(sol::table& lua_var)
     :lua_var_(lua_var)
 {
     node_ = YGNodeNew();
-    parse_node(node_,lua_var);
-    parse_widget(lua_var,*this);
+    parse_self_layout();
+    parse_self_widget();
+    lua_var_["nativeContext"] = this;
 }
 
-int32_t YogaElement::push_element(YogaElement &element)
+int32_t YogaElement::push_element(std::shared_ptr<YogaElement> element)
 {
-    YGNodeInsertChild(node_,element.node_,YGNodeGetChildCount(node_));
+    YGNodeInsertChild(node_,element->node_,YGNodeGetChildCount(node_));
     children_.push_back(element);
     return children_.size();
 }
 
-int32_t YogaElement::refresh_position(float parent_x, float parent_y)
+int32_t YogaElement::parse_self_layout()
+{
+    parse_node(lua_var_,node_);
+    return 0;
+}
+
+int32_t YogaElement::parse_self_widget()
+{
+    parse_widget(lua_var_,*this);
+    return 0;
+}
+
+int32_t YogaElement::get_back_position(float parent_x, float parent_y)
 {
     left_ = YGNodeLayoutGetLeft(node_) + parent_x;
     top_ = YGNodeLayoutGetTop(node_) + parent_y;
@@ -211,7 +224,7 @@ int32_t YogaElement::refresh_position(float parent_x, float parent_y)
     return 0;
 }
 
-int32_t YogaElement::refresh_position_recursion()
+int32_t YogaElement::get_back_position_recursion()
 {
     float parent_x = 0, parent_y = 0;
     YGNodeRef parent = node_;
@@ -219,29 +232,37 @@ int32_t YogaElement::refresh_position_recursion()
         parent_x += YGNodeLayoutGetLeft(parent);
         parent_y += YGNodeLayoutGetTop(parent);
     }
-    refresh_position(parent_x,parent_y);
+    get_back_position(parent_x,parent_y);
     return 0;
 }
 
-
-int32_t YogaElement::parse_widget(sol::table &widget_table, YogaElement &element_self)
+void YogaElement::emit_event(const std::string &event)
 {
-    sol::optional<std::string> widget_opt = widget_table["widget"];
+    sol::optional<sol::function> func = lua_var_[event];
+    if(func != sol::nullopt){
+        func.value()(lua_var_);
+    }
+}
+
+
+int32_t YogaElement::parse_widget(sol::table &element_table, YogaElement &element_self)
+{
+    sol::optional<std::string> widget_opt = element_table["widget"];
     if( widget_opt != sol::nullopt ){
         element_self.widget_ = widget_opt.value();
-        sol::optional<sol::table> style_opt = widget_table["style"];
+        sol::optional<sol::table> style_opt = element_table["style"];
         if(style_opt != sol::nullopt){
             sol::table style = style_opt.value();
             for(auto& item : style){
                 std::string style_name = item.first.as<std::string>();
                 sol::lua_value value = item.second;
                 auto style_value = lua_get_style_value(value);
-                element_self.properties_[style_name] = style_value;
+                element_self.styles_[style_name] = style_value;
             }
         }
     }
 
-    sol::optional<std::string> id_opt = widget_table["id"];
+    sol::optional<std::string> id_opt = element_table["id"];
     if( id_opt != sol::nullopt ){
         element_self.id_ = id_opt.value();
     }
@@ -251,90 +272,179 @@ int32_t YogaElement::parse_widget(sol::table &widget_table, YogaElement &element
 
 
 
-int32_t YogaElement::parse_node(YGNode* node,sol::table &node_define)
+int32_t YogaElement::parse_node(sol::table &element_table, YGNode* node)
 {
     //flex properties
-    auto flexDirection = LUA_GET_VALUE<std::string>(node_define,"flexDirection","row");
+    auto flexDirection = LUA_GET_VALUE<std::string>(element_table,"flexDirection","row");
     YGNodeStyleSetFlexDirection(node, MAP_GET_VALUE(flex_direction_map,flexDirection,YGFlexDirectionRow));
 
-    auto flexGrow = LUA_GET_VALUE<float>(node_define,"flexGrow", 0);
+    auto flexGrow = LUA_GET_VALUE<float>(element_table,"flexGrow", 0);
     YGNodeStyleSetFlexGrow(node,flexGrow);
 
-    auto flexShrink = LUA_GET_VALUE<float>(node_define,"flexShrink", 1);
+    auto flexShrink = LUA_GET_VALUE<float>(element_table,"flexShrink", 1);
     YGNodeStyleSetFlexShrink(node,flexShrink);
 
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY(node_define,"flexBasis",node,FlexBasis)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY(element_table,"flexBasis",node,FlexBasis)
 
-    auto flexWrap = LUA_GET_VALUE<std::string>(node_define,"flexWrap","no-wrap");
+    auto flexWrap = LUA_GET_VALUE<std::string>(element_table,"flexWrap","no-wrap");
     YGNodeStyleSetFlexWrap(node, MAP_GET_VALUE(wrap_map,flexWrap,YGWrapNoWrap));
 
-    auto direction = LUA_GET_VALUE<std::string>(node_define,"direction","inherit");
+    auto direction = LUA_GET_VALUE<std::string>(element_table,"direction","inherit");
     YGNodeStyleSetDirection(node, MAP_GET_VALUE(direction_map,direction,YGDirectionInherit));
 
     //alignment properties
-    auto justifyContent = LUA_GET_VALUE<std::string>(node_define,"justifyContent","flex-start");
+    auto justifyContent = LUA_GET_VALUE<std::string>(element_table,"justifyContent","flex-start");
     YGNodeStyleSetJustifyContent(node, MAP_GET_VALUE(justify_map,justifyContent,YGJustifyFlexStart));
 
-    auto alignContents = LUA_GET_VALUE<std::string>(node_define,"alignContents","stretch");
+    auto alignContents = LUA_GET_VALUE<std::string>(element_table,"alignContents","stretch");
     YGNodeStyleSetAlignContent(node, MAP_GET_VALUE(align_map,alignContents,YGAlignAuto));
 
-    auto alignItems = LUA_GET_VALUE<std::string>(node_define,"alignItems","stretch");
+    auto alignItems = LUA_GET_VALUE<std::string>(element_table,"alignItems","stretch");
     YGNodeStyleSetAlignItems(node, MAP_GET_VALUE(align_map,alignItems,YGAlignAuto));
 
-    auto alignSelf = LUA_GET_VALUE<std::string>(node_define,"alignSelf","auto");
+    auto alignSelf = LUA_GET_VALUE<std::string>(element_table,"alignSelf","auto");
     YGNodeStyleSetAlignSelf(node, MAP_GET_VALUE(align_map,alignSelf,YGAlignAuto));
 
     //position properties
-    auto aspectRatio = LUA_GET_VALUE<float>(node_define,"aspectRatio", 0);
+    auto aspectRatio = LUA_GET_VALUE<float>(element_table,"aspectRatio", 0);
     if(aspectRatio > 0) YGNodeStyleSetAspectRatio(node,aspectRatio);
 
-    auto positionType = LUA_GET_VALUE<std::string>(node_define,"positionType","relative");
+    auto positionType = LUA_GET_VALUE<std::string>(element_table,"positionType","relative");
     YGNodeStyleSetPositionType(node,MAP_GET_VALUE(position_type_map,positionType,YGPositionTypeRelative));
 
 
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY(node_define,"width", node,Width)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY(node_define,"height",node,Height)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_NO_AUTO(node_define,"minimumWidth", node,MinWidth)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_NO_AUTO(node_define,"minimumHeight",node,MinHeight)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_NO_AUTO(node_define,"maximumWidth", node,MaxWidth)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_NO_AUTO(node_define,"maximumHeight",node,MaxHeight)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY(element_table,"width", node,Width)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY(element_table,"height",node,Height)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_NO_AUTO(element_table,"minimumWidth", node,MinWidth)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_NO_AUTO(element_table,"minimumHeight",node,MinHeight)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_NO_AUTO(element_table,"maximumWidth", node,MaxWidth)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_NO_AUTO(element_table,"maximumHeight",node,MaxHeight)
 
 
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(node_define,"marginAll"      ,node,Margin,YGEdgeAll)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(node_define,"marginBottom"   ,node,Margin,YGEdgeBottom)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(node_define,"marginLeft"     ,node,Margin,YGEdgeLeft)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(node_define,"marginRight"    ,node,Margin,YGEdgeRight)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(node_define,"marginTop"      ,node,Margin,YGEdgeTop)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(node_define,"paddingAll"     ,node,Padding,YGEdgeAll)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(node_define,"paddingBottom"  ,node,Padding,YGEdgeBottom)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(node_define,"paddingLeft"    ,node,Padding,YGEdgeLeft)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(node_define,"paddingRight"   ,node,Padding,YGEdgeRight)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(node_define,"paddingTop"     ,node,Padding,YGEdgeTop)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(element_table,"marginAll"      ,node,Margin,YGEdgeAll)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(element_table,"marginBottom"   ,node,Margin,YGEdgeBottom)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(element_table,"marginLeft"     ,node,Margin,YGEdgeLeft)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(element_table,"marginRight"    ,node,Margin,YGEdgeRight)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE(element_table,"marginTop"      ,node,Margin,YGEdgeTop)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(element_table,"paddingAll"     ,node,Padding,YGEdgeAll)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(element_table,"paddingBottom"  ,node,Padding,YGEdgeBottom)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(element_table,"paddingLeft"    ,node,Padding,YGEdgeLeft)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(element_table,"paddingRight"   ,node,Padding,YGEdgeRight)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_NO_AUTO(element_table,"paddingTop"     ,node,Padding,YGEdgeTop)
 
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"borderAll"      ,node,Border,YGEdgeAll)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"borderBottom"   ,node,Border,YGEdgeBottom)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"borderLeft"     ,node,Border,YGEdgeLeft)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"borderRight"    ,node,Border,YGEdgeRight)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"borderTop"      ,node,Border,YGEdgeTop)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"borderAll"      ,node,Border,YGEdgeAll)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"borderBottom"   ,node,Border,YGEdgeBottom)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"borderLeft"     ,node,Border,YGEdgeLeft)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"borderRight"    ,node,Border,YGEdgeRight)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"borderTop"      ,node,Border,YGEdgeTop)
 
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"positionBottom" ,node,Position,YGEdgeBottom)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"positionLeft"   ,node,Position,YGEdgeLeft)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"positionRight"  ,node,Position,YGEdgeRight)
-    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(node_define,"positionTop"    ,node,Position,YGEdgeTop)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"positionBottom" ,node,Position,YGEdgeBottom)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"positionLeft"   ,node,Position,YGEdgeLeft)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"positionRight"  ,node,Position,YGEdgeRight)
+    GET_LUA_VALUE_AND_SET_YG_PROPERTY_EDGE_ONLY_VALUE(element_table,"positionTop"    ,node,Position,YGEdgeTop)
 
     return 0;
 }
 
 
-YogaLuaLayout::YogaLuaLayout(sol::table &lua_var)
-    :YogaElement(lua_var)
+YogaLuaLayout::YogaLuaLayout(sol::table &lua_object,sol::table &lua_ui)
+    :YogaElement(lua_ui)
+    ,object_(lua_object)
 {
-
-
+    auto a = lua_object["ui"].get<sol::table>();
+    object_["nativeContext"] = this;
+    object_["nativeDoOperator"] = &YogaLuaLayout::lua_do_operator;
+    object_["nativeSetElementProperty"] = &YogaLuaLayout::lua_set_element_property;
+    parse_child_element_recursion();
 }
 
 int32_t YogaLuaLayout::lua_set_element_property(const std::string &id,const  std::string &property, sol::lua_value value)
 {
+    return 0;
+}
+
+int32_t YogaLuaLayout::lua_do_operator(const std::string &method, sol::lua_value value)
+{
+    if(method == "dirty"){
+        std::string id = value.as<std::string>();
+        std::map<std::string,YogaElement*>::iterator it = named_elements_.find(id);
+        if( it != named_elements_.end()){
+            YogaElement* element = it->second;
+            //MR_TIMER_NEW(t);
+            element->parse_self_layout();
+            //MR_INFO("dirty parse property use {} ms",MR_TIMER_MS(t));
+        }
+        dirty_ = true;
+    }
+    return 0;
+}
+
+int32_t YogaLuaLayout::parse_child_element_recursion()
+{
+    //current is static layout
+    //TODO:when dynamic create element, whether need clear all and re create elements???
+    children_.clear();
+
+    std::function<int32_t(sol::table &,YogaElement&)> element_parser;
+    element_parser = [&element_parser](sol::table &widget_table,YogaElement& element_self) ->int32_t{
+        sol::optional<sol::table> elements = widget_table["elements"];
+        if(elements != sol::nullopt){
+
+            for(const auto &it : elements.value()){
+                sol::lua_value element = it.second;
+                auto type = element.value().get_type();
+                if(type ==sol::type::table){
+                    sol::table element_table = element.as<sol::table>();
+                    auto element_child = std::make_shared<YogaElement>(element_table);
+                    element_parser(element_table,*element_child);
+
+                    element_self.push_element(element_child);
+                }
+            }
+        }
+        return 0;
+    };
+    element_parser(lua_var_,*this);
+    return 0;
+}
+
+int32_t YogaLuaLayout::foreach_elements(ElementOperator visitor)
+{
+    std::function<void(YogaElement& element,ElementOperator& visitor)> scaner;
+    scaner = [&scaner,this](YogaElement& element,ElementOperator& visitor)->void{
+        visitor(element);
+        for(auto& item : element.children_){
+            scaner(*item,visitor);
+        }
+    };
+    scaner(*this,visitor);
+    return 0;
+}
+
+int32_t YogaLuaLayout::refresh_position_all()
+{
+    YGNodeCalculateLayout(node_, 1000, 1000, YGDirectionLTR);
+
+    std::function<void(YogaElement& element,float parent_x,float parent_y)> refresher;
+
+    refresher = [&refresher](YogaElement& element,float parent_x,float parent_y)->void{
+        element.get_back_position(parent_x,parent_y);
+        for(auto& item : element.children_){
+            refresher(*item,element.left_,element.top_);
+        }
+    };
+    refresher(*this,0,0);
+    return 0;
+}
+
+int32_t YogaLuaLayout::refresh_named_elements()
+{
+    named_elements_.clear();;
+    foreach_elements([this](YogaElement& element){
+        if(element.id_.size()){
+            named_elements_[element.id_] = &element;
+        }
+    });
     return 0;
 }
 
@@ -353,18 +463,26 @@ int32_t YogaLuaLayout::set_renderer(YogaLuaLayoutRenderer *renderer)
 
 int32_t YogaLuaLayout::render_frame()
 {
+    if(dirty_){
+        dirty_ = false;
+        //MR_TIMER_NEW(t);
+        refresh_position_all();
+        //MR_INFO("refresh_position_all calc use {} ms",MR_TIMER_MS(t));
+    }
+
     if(!renderer_)
         return -1;
+
 
     std::function<void(YogaElement& element)> renderer_caller;
     renderer_caller = [&renderer_caller,this](YogaElement& element)->void{
         renderer_->on_render_elements(element);
         for(auto& item : element.children_){
-            renderer_caller(item);
+            renderer_caller(*item);
         }
         renderer_->after_render_elements(element);
     };
-
     renderer_caller(*this);
+
     return 0;
 }

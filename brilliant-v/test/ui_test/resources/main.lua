@@ -97,16 +97,61 @@ keywordsHint={
 
 oo.class("Layout", BaseClase)
 function Layout:init()
-    self.layout={}
+    self.ui={}
+    self.namedElements={}
+end
+
+function Layout:parseNamedElements()
+    self.namedElements={}
+    local parser = nil
+    parser = function(element)
+        if(element.id ~= nil)then
+            self.namedElements[element.id] = element
+            self[element.id] = element
+        end
+        if(element.elements ~= nil) then
+            for i,v  in ipairs(element.elements) do
+                parser(v)
+            end
+        end
+    end
+    parser(self.ui)
 end
 
 function Layout:setElementProperty(id,property,value)
+    if(self.namedElements[id] ~= nil) then
+        self.namedElements[id][property] = value
+        self.nativeDoOperator(self.nativeContext,"dirty",id)
+    end
+end
 
+function Layout:getElementProperty(id,property)
+    if(self.namedElements[id] ~= nil) then
+        return self.namedElements[id][property]
+    end
+    return nil
+end
+
+function Layout:setElementStyle(id,style,value)
+    if(self.namedElements[id] ~= nil) then
+        if(self.namedElements[id].style ~= nil) then
+            self.namedElements[id].style[style] = value
+        end
+    end
+end
+function Layout:getElementStyle(id,style)
+    if(self.namedElements[id] ~= nil) then
+        if(self.namedElements[id].style ~= nil) then
+            return self.namedElements[id].style[style]
+        end
+    end
+    return nil
 end
 
 oo.class("MainUI", Layout)
 function MainUI:init()
-    self.layout={
+
+    self.ui={
         id="root",
         flexDirection="column",
         widget="Window",
@@ -140,7 +185,7 @@ function MainUI:init()
                         height=50,
                         widget="Button",
                         style={
-                            text="Play",opacity=0.5,color=0xFF0000FF,colorBackGround=0x88FF00FF
+                            text="Play",opacity=0.5,colorButton=0xFF0000FF,colorButtonHovered=0x88FF00FF
                         }
                     },
                     {
@@ -151,7 +196,7 @@ function MainUI:init()
                         marginRight=10,
                         widget="Button",
                         style={
-                            text="Pause",opacity=0.5,color=0xFF0000FF,colorBackGround=0x88FF00FF
+                            text="Pause",opacity=0.5,colorButton=0x00FF00FF,colorButtonHovered=0x88FF00FF
                         }
                     },
                     {
@@ -160,10 +205,15 @@ function MainUI:init()
                         height=50,
                         widget="Button",
                         style={
-                            text="Stop",opacity=0.5,color=0xFF0000FF,colorBackGround=0x88FF00FF
+                            text="Stop",opacity=0.5,colorButton=0x0000FFFF,colorButtonHovered=0x88FF00FF,colorButtonActive=0xFFFFFF55,frameRounding=8
                         },
-                        onclicked=function ()
-                            io.stderr:write(">>>>>>>>>>>>>>>>>>>>>>:"..self.layout.id.."\n")
+                        onclicked = function(this)
+                            self:setElementProperty("Ra","width",self:getElementProperty("Ra","width")+10)
+                            self:setElementProperty("Ra","height",self:getElementProperty("Ra","height")+10)
+                            --self:setElementStyle("btn3","opacity",self:getElementStyle("btn3","opacity")+0.1)
+                            --self.btn3.style.opacity = self.btn3.style.opacity + 0.1
+                            io.stderr:write(">>>>>>>>>>>>>>>>>>>>>>:")
+                            --io.stderr:write(">>>>>>>>>>>>>>>>>>>>>>:"..self.Ra.width.." this id:"..this.style.opacity.."\n")
                         end
                     },
                 }
@@ -174,12 +224,20 @@ function MainUI:init()
                 widget="Slider",
             },
             {
-                id="R",
+                height=50,
+                width=256,
+                widget="Text",
+                style={
+                    text="This is a Text",opacity=0.5,color=0xFF0000FF,colorHovered=0x88FF00FF
+                }
+            },
+            {
+                id="Ra",
                 width=128,
                 height=128,
                 widget="ImageButton",
                 style={
-                    image="mail-message-new.png",opacity=0.5,color=0xFF0000FF,colorBackGround=0x88FF00FF
+                    image="mail-message-new.png",opacity=0.5,color=0xFF0000FF,colorHovered=0x88FF00FF
                 }
             },
         }
@@ -189,12 +247,7 @@ end
 
 registerWidgets("org.mr.brilliant.MainUI", MainUI)
 
-print_dump(MainUI,"MainUI")
-print_dump(flexDefault,"flexDefault")
-print_dump(keywordsHint,"keywordsHint")
+--print_dump(MainUI,"MainUI")
+--print_dump(flexDefault,"flexDefault")
+--print_dump(keywordsHint,"keywordsHint")
 
-test = {
-    auto="auto",
-    percent="45%",
-    num=3.1415926
-}

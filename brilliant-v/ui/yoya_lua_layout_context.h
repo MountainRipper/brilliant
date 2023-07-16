@@ -12,8 +12,6 @@ public:
     int32_t load(const std::string& ui_script);
     YogaLuaLayout* get_layout(const std::string& id);
 private:
-    int32_t parse_layouts(sol::table& widget_table, YogaElement &element_self);
-private:
     std::shared_ptr<sol::state> lua_;
     std::map<std::string,YogaLuaLayout> layouts_origin_;
 };

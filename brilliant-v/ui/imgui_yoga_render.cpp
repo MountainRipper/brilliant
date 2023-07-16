@@ -2,8 +2,108 @@
 #include "mr_im_widget.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
-#include "imgui_yoga_render.h"
 #include <mrcommon/logger.h>
+#include <sol/sol.hpp>
+#include "imgui_yoga_render.h"
+
+
+#define SWAP_ENDIAN(u32) u32 = (u32 >> 24) | ((u32<<8) & 0x00FF0000) | ((u32>>8) & 0x0000FF00) | (u32 << 24);
+
+struct ImGuiStyleVarInfo{
+    uint8_t value_count;
+    ImGuiStyleVar_ type;
+};
+std::unordered_map<std::string,ImGuiStyleVarInfo> map_style_var_name = {
+    // name ---------------------// Member in ImGuiStyle structure (see ImGuiStyle for descriptions)
+    {"alpha",                   {1,ImGuiStyleVar_Alpha} },                    // float     Alpha
+    {"disabledAlpha",           {1,ImGuiStyleVar_DisabledAlpha} },            // float     DisabledAlpha
+    {"windowPadding",           {2,ImGuiStyleVar_WindowPadding} },            // ImVec2    WindowPadding
+    {"windowRounding",          {1,ImGuiStyleVar_WindowRounding} },           // float     WindowRounding
+    {"windowBorderSize",        {1,ImGuiStyleVar_WindowBorderSize} },         // float     WindowBorderSize
+    {"windowMinSize",           {2,ImGuiStyleVar_WindowMinSize} },            // ImVec2    WindowMinSize
+    {"windowTitleAlign",        {2,ImGuiStyleVar_WindowTitleAlign} },         // ImVec2    WindowTitleAlign
+    {"childRounding",           {1,ImGuiStyleVar_ChildRounding} },            // float     ChildRounding
+    {"childBorderSize",         {1,ImGuiStyleVar_ChildBorderSize} },          // float     ChildBorderSize
+    {"popupRounding",           {1,ImGuiStyleVar_PopupRounding} },            // float     PopupRounding
+    {"popupBorderSize",         {1,ImGuiStyleVar_PopupBorderSize} },          // float     PopupBorderSize
+    {"framePadding",            {2,ImGuiStyleVar_FramePadding} },             // ImVec2    FramePadding
+    {"frameRounding",           {1,ImGuiStyleVar_FrameRounding} },            // float     FrameRounding
+    {"frameBorderSize",         {1,ImGuiStyleVar_FrameBorderSize} },          // float     FrameBorderSize
+    {"itemSpacing",             {2,ImGuiStyleVar_ItemSpacing} },              // ImVec2    ItemSpacing
+    {"itemInnerSpacing",        {2,ImGuiStyleVar_ItemInnerSpacing} },         // ImVec2    ItemInnerSpacing
+    {"indentSpacing",           {1,ImGuiStyleVar_IndentSpacing} },            // float     IndentSpacing
+    {"cellPadding",             {2,ImGuiStyleVar_CellPadding} },              // ImVec2    CellPadding
+    {"scrollbarSize",           {1,ImGuiStyleVar_ScrollbarSize} },            // float     ScrollbarSize
+    {"scrollbarRounding",       {1,ImGuiStyleVar_ScrollbarRounding} },        // float     ScrollbarRounding
+    {"grabMinSize",             {1,ImGuiStyleVar_GrabMinSize} },              // float     GrabMinSize
+    {"grabRounding",            {1,ImGuiStyleVar_GrabRounding} },             // float     GrabRounding
+    {"tabRounding",             {1,ImGuiStyleVar_TabRounding} },              // float     TabRounding
+    {"buttonTextAlign",         {2,ImGuiStyleVar_ButtonTextAlign} },          // ImVec2    ButtonTextAlign
+    {"selectableTextAlign",     {2,ImGuiStyleVar_SelectableTextAlign} },      // ImVec2    SelectableTextAlign
+    {"separatorTextBorderSize", {1,ImGuiStyleVar_SeparatorTextBorderSize} },  // float  SeparatorTextBorderSize
+    {"separatorTextAlign",      {2,ImGuiStyleVar_SeparatorTextAlign} },       // ImVec2    SeparatorTextAlign
+    {"separatorTextPadding",    {2,ImGuiStyleVar_SeparatorTextPadding} },     // ImVec2    SeparatorTextPadding
+};
+
+std::unordered_map<std::string,ImGuiCol_> map_style_color_name = {
+    {"colorTextDisabled",           ImGuiCol_TextDisabled},
+    {"colorWindowBg",               ImGuiCol_WindowBg},              // Background of normal windows
+    {"colorChildBg",                ImGuiCol_ChildBg},               // Background of child windows
+    {"colorPopupBg",                ImGuiCol_PopupBg},               // Background of popups, menus, tooltips windows
+    {"colorBorder",                 ImGuiCol_Border},
+    {"colorBorderShadow",           ImGuiCol_BorderShadow},
+    {"colorFrameBg",                ImGuiCol_FrameBg},               // Background of checkbox, radio button, plot, slider, text input
+    {"colorFrameBgHovered",         ImGuiCol_FrameBgHovered},
+    {"colorFrameBgActive",          ImGuiCol_FrameBgActive},
+    {"colorTitleBg",                ImGuiCol_TitleBg},
+    {"colorTitleBgActive",          ImGuiCol_TitleBgActive},
+    {"colorTitleBgCollapsed",       ImGuiCol_TitleBgCollapsed},
+    {"colorMenuBarBg",              ImGuiCol_MenuBarBg},
+    {"colorScrollbarBg",            ImGuiCol_ScrollbarBg},
+    {"colorScrollbarGrab",          ImGuiCol_ScrollbarGrab},
+    {"colorScrollbarGrabHovered",   ImGuiCol_ScrollbarGrabHovered},
+    {"colorScrollbarGrabActive",    ImGuiCol_ScrollbarGrabActive},
+    {"colorCheckMark",              ImGuiCol_CheckMark},
+    {"colorSliderGrab",             ImGuiCol_SliderGrab},
+    {"colorSliderGrabActive",       ImGuiCol_SliderGrabActive},
+    {"colorButton",                 ImGuiCol_Button},
+    {"colorButtonHovered",          ImGuiCol_ButtonHovered},
+    {"colorButtonActive",           ImGuiCol_ButtonActive},
+    {"colorHeader",                 ImGuiCol_Header},                // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+    {"colorHeaderHovered",          ImGuiCol_HeaderHovered},
+    {"colorHeaderActive",           ImGuiCol_HeaderActive},
+    {"colorSeparator",              ImGuiCol_Separator},
+    {"colorSeparatorHovered",       ImGuiCol_SeparatorHovered},
+    {"colorSeparatorActive",        ImGuiCol_SeparatorActive},
+    {"colorResizeGrip",             ImGuiCol_ResizeGrip},            // Resize grip in lower-right and lower-left corners of windows.
+    {"colorResizeGripHovered",      ImGuiCol_ResizeGripHovered},
+    {"colorResizeGripActive",       ImGuiCol_ResizeGripActive},
+    {"colorTab",                    ImGuiCol_Tab},                   // TabItem in a TabBar
+    {"colorTabHovered",             ImGuiCol_TabHovered},
+    {"colorTabActive",              ImGuiCol_TabActive},
+    {"colorTabUnfocused",           ImGuiCol_TabUnfocused},
+    {"colorTabUnfocusedActive",     ImGuiCol_TabUnfocusedActive},
+    {"colorPlotLines",              ImGuiCol_PlotLines},
+    {"colorPlotLinesHovered",       ImGuiCol_PlotLinesHovered},
+    {"colorPlotHistogram",          ImGuiCol_PlotHistogram},
+    {"colorPlotHistogramHovered",   ImGuiCol_PlotHistogramHovered},
+    {"colorTableHeaderBg",          ImGuiCol_TableHeaderBg},         // Table header background
+    {"colorTableBorderStrong",      ImGuiCol_TableBorderStrong},     // Table outer and header borders (prefer using Alpha=1.0 here)
+    {"colorTableBorderLight",       ImGuiCol_TableBorderLight},      // Table inner borders (prefer using Alpha=1.0 here)
+    {"colorTableRowBg",             ImGuiCol_TableRowBg},            // Table row background (even rows)
+    {"colorTableRowBgAlt",          ImGuiCol_TableRowBgAlt},         // Table row background (odd rows)
+    {"colorTextSelectedBg",         ImGuiCol_TextSelectedBg},
+    {"colorDragDropTarget",         ImGuiCol_DragDropTarget},        // Rectangle highlighting a drop target
+    {"colorNavHighlight",           ImGuiCol_NavHighlight},          // Gamepad/keyboard: current highlighted item
+    {"colorNavWindowingHighlight",  ImGuiCol_NavWindowingHighlight}, // Highlight window when using CTRL+TAB
+    {"colorNavWindowingDimBg",      ImGuiCol_NavWindowingDimBg},     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+    {"colorModalWindowDimBg",       ImGuiCol_ModalWindowDimBg}      // Darken/colorize entire screen behind a modal window, when one is active
+};
+
+//std::set<std::string> private_style = {
+//    "colorText" //ColorText widget's color
+//};
+
 ImGuiYogaRender::ImGuiYogaRender()
 {
 
@@ -12,9 +112,9 @@ ImGuiYogaRender::ImGuiYogaRender()
 
 int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
 {
-    MR_INFO("render wiget:{} id:{} pos:{}#{}#{}#{} size:{}x{}",element.widget_,element.id_,
-             element.top_,element.left_,element.bottom_,element.right_,
-             element.width_,element.height_);
+//    MR_INFO("render wiget:{} id:{} pos:{}#{}#{}#{} size:{}x{}",element.widget_,element.id_,
+//             element.top_,element.left_,element.bottom_,element.right_,
+//             element.width_,element.height_);
 
     if(element.widget_.empty()){
         return 0;
@@ -24,24 +124,48 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
 
     if(element.widget_ == "Window"){
         ImGui::Begin(element.id_.c_str());
+        return 0;
     }
 
+    int32_t pushed_style_color = 0;
+    int32_t pushed_style_var = 0;
+    element_push_style_var(element,pushed_style_color,pushed_style_var);
+
     ImGui::SetCursorPos(ImVec2(element.left_,element.top_) + ImGui::GetWindowContentRegionMin() );
-    if(element.widget_ == "Button"){
-        ImGui::Button(std::get<std::string>(element.properties_["text"]).c_str(),size);
+    if(element.widget_ == "Button" || element.widget_ == "ImageButton"){
+        int32_t pushed_count = 0;
+
+        bool clicked = false;
+        if(element.widget_ == "Button")
+            clicked = ImGui::Button(element.style_value("text","").c_str(),size);
+        else
+            clicked = mrui::ImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size);ImGui::SameLine();
+
+        if(pushed_count)
+            ImGui::PopStyleColor(pushed_count);
+
+        if(clicked){
+            element.emit_event("onclicked");
+        }
     }
     else if(element.widget_ == "Image"){
-        mrui::Image(std::get<std::string>(element.properties_["image"]).c_str(),NULL,size);ImGui::SameLine();
+        mrui::Image(element.style_value("image","").c_str(),NULL,size);ImGui::SameLine();
     }
-    else if(element.widget_ == "ImageButton"){
-        mrui::ImageButton(element.id_.c_str(),std::get<std::string>(element.properties_["image"]).c_str(),NULL,size);ImGui::SameLine();
+    if(element.widget_ == "Text"){
+        ImGui::SetNextItemWidth(element.width_);
+        ImGui::Text("%s", element.style_value("text","").c_str());
     }
     else if(element.widget_ == "Slider"){
-        //mrui::Slid(element.id_.c_str(),std::get<std::string>(element.properties_["image"]).c_str(),NULL,size);ImGui::SameLine();
         static float a = 0;
         ImGui::SetNextItemWidth(element.width_);
         ImGui::SliderFloat(element.id_.c_str(),&a,0,100);
     }
+
+    if(pushed_style_color)
+        ImGui::PopStyleColor(pushed_style_color);
+    if(pushed_style_var)
+        ImGui::PopStyleVar(pushed_style_var);
+
     return 0;
 }
 
@@ -50,5 +174,61 @@ int32_t ImGuiYogaRender::after_render_elements(YogaElement &element)
     if(element.widget_ == "Window"){
         ImGui::End();
     }
+    else if(element.widget_ == "ChildWindow"){
+        ImGui::EndChild();
+    }
     return 0;
+}
+
+
+int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element,int32_t& pushed_style_color,int32_t& pushed_style_var){
+    pushed_style_color = 0;
+    pushed_style_var = 0;
+
+    for(auto& style : element.styles_){
+        const StyleValue& style_value = style.second;
+
+        auto color_it = map_style_color_name.find(style.first);
+        if(color_it != map_style_color_name.end() ){
+            if(style_value.index() == kStyleValueNumberIndex){
+                pushed_style_color++;
+                uint32_t color = std::get<double>(style_value);
+                SWAP_ENDIAN(color)
+                ImGui::PushStyleColor(color_it->second,color);
+            }
+            continue;
+        }
+
+        auto var_it = map_style_var_name.find(style.first);
+        if(var_it != map_style_var_name.end()){
+            const ImGuiStyleVarInfo& info = var_it->second;
+            if(info.value_count == 1 && style_value.index() == kStyleValueNumberIndex){
+                float value = std::get<double>(style_value);
+                ImGui::PushStyleVar(info.type,value);
+                pushed_style_var++;
+            }
+            else if(info.value_count == 2){
+                ImVec2 value(0,0);
+                if(style_value.index() == kStyleValueNumberIndex){
+                    auto v = std::get<double>(style_value);
+                    value.x = value.y = v;
+                }
+                else if(style_value.index() == kStyleValueNumberArrayIndex){
+                    auto v = std::get<std::vector<double>>(style_value);
+                    if(v.empty())
+                        continue;
+
+                    if(v.size() == 1)
+                        value.x = value.y = v[0];
+                    else{
+                        value.x = v[0];
+                        value.y = v[1];
+                    }
+                }
+                ImGui::PushStyleVar(info.type,value);
+                pushed_style_var++;
+            }
+        }
+    }
+    return pushed_style_color + pushed_style_var;
 }
