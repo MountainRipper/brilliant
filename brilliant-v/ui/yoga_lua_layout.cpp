@@ -463,11 +463,10 @@ int32_t YogaLuaLayout::set_renderer(YogaLuaLayoutRenderer *renderer)
 
 int32_t YogaLuaLayout::render_frame()
 {
+    MR_TIMER_NEW(t);
     if(dirty_){
         dirty_ = false;
-        //MR_TIMER_NEW(t);
         refresh_position_all();
-        //MR_INFO("refresh_position_all calc use {} ms",MR_TIMER_MS(t));
     }
 
     if(!renderer_)
@@ -484,5 +483,6 @@ int32_t YogaLuaLayout::render_frame()
     };
     renderer_caller(*this);
 
+    MR_INFO("render frame use {} ms",MR_TIMER_MS(t));
     return 0;
 }

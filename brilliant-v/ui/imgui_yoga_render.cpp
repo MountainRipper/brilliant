@@ -1,8 +1,10 @@
 
-#include "mr_im_widget.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
+#include "mr_im_widget.h"
 #include <imgui.h>
+#include <filesystem>
 #include <mrcommon/logger.h>
+#include <mrcommon/filesystem.h>
 #include <sol/sol.hpp>
 #include "imgui_yoga_render.h"
 
@@ -46,6 +48,7 @@ std::unordered_map<std::string,ImGuiStyleVarInfo> map_style_var_name = {
 };
 
 std::unordered_map<std::string,ImGuiCol_> map_style_color_name = {
+    {"colorText",                   ImGuiCol_Text},
     {"colorTextDisabled",           ImGuiCol_TextDisabled},
     {"colorWindowBg",               ImGuiCol_WindowBg},              // Background of normal windows
     {"colorChildBg",                ImGuiCol_ChildBg},               // Background of child windows
@@ -100,10 +103,6 @@ std::unordered_map<std::string,ImGuiCol_> map_style_color_name = {
     {"colorModalWindowDimBg",       ImGuiCol_ModalWindowDimBg}      // Darken/colorize entire screen behind a modal window, when one is active
 };
 
-//std::set<std::string> private_style = {
-//    "colorText" //ColorText widget's color
-//};
-
 ImGuiYogaRender::ImGuiYogaRender()
 {
 
@@ -116,6 +115,10 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
 //             element.top_,element.left_,element.bottom_,element.right_,
 //             element.width_,element.height_);
 
+    if(!theme_loaded_){
+        theme_loaded_ = true;
+        load_theme("defaultTheme");
+    }
     if(element.widget_.empty()){
         return 0;
     }
@@ -127,9 +130,11 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
         return 0;
     }
 
+    MR_TIMER_NEW(t);
     int32_t pushed_style_color = 0;
     int32_t pushed_style_var = 0;
-    element_push_style_var(element,pushed_style_color,pushed_style_var);
+    element_push_style_var(element,pushed_style_color,pushed_style_var,&default_push_setter_);
+    MR_INFO("push style use {} us",MR_TIMER_US(t));
 
     ImGui::SetCursorPos(ImVec2(element.left_,element.top_) + ImGui::GetWindowContentRegionMin() );
     if(element.widget_ == "Button" || element.widget_ == "ImageButton"){
@@ -180,8 +185,7 @@ int32_t ImGuiYogaRender::after_render_elements(YogaElement &element)
     return 0;
 }
 
-
-int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element,int32_t& pushed_style_color,int32_t& pushed_style_var){
+int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element, int32_t& pushed_style_color, int32_t& pushed_style_var, StyleSetter *setter){
     pushed_style_color = 0;
     pushed_style_var = 0;
 
@@ -191,10 +195,34 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element,int32_t& pu
         auto color_it = map_style_color_name.find(style.first);
         if(color_it != map_style_color_name.end() ){
             if(style_value.index() == kStyleValueNumberIndex){
-                pushed_style_color++;
                 uint32_t color = std::get<double>(style_value);
                 SWAP_ENDIAN(color)
-                ImGui::PushStyleColor(color_it->second,color);
+                if(setter && setter->color_setter_uint32){
+                    pushed_style_color++;
+                    setter->color_setter_uint32(color_it->second,color);
+                }
+            }
+            else if(style_value.index() == kStyleValueNumberArrayIndex){
+                auto v = std::get<std::vector<double>>(style_value);
+                if(v.empty())
+                    continue;
+                ImVec4 value(0,0,0,1);
+                float* walker = (float*)&value;
+                int count = std::min(v.size(),(size_t)4);
+                float float_div = 1;
+                for(auto item : v){
+                    //use int for color values,if need int color{1,1,1,1}, use {1,1,1,1,255}
+                    if(item > 1.0001){
+                        float_div = 255;break;
+                    }
+                }
+                for(int index = 0;index < count; index++){
+                    *walker++ = v[index] / float_div;
+                }
+                if(setter && setter->color_setter_vec4){
+                    pushed_style_color++;
+                    setter->color_setter_vec4(color_it->second,value);
+                }
             }
             continue;
         }
@@ -203,9 +231,11 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element,int32_t& pu
         if(var_it != map_style_var_name.end()){
             const ImGuiStyleVarInfo& info = var_it->second;
             if(info.value_count == 1 && style_value.index() == kStyleValueNumberIndex){
-                float value = std::get<double>(style_value);
-                ImGui::PushStyleVar(info.type,value);
-                pushed_style_var++;
+                if(setter && setter->var_setter_float){
+                    pushed_style_var++;
+                    float value = std::get<double>(style_value);
+                    setter->var_setter_float(info.type,value);
+                }
             }
             else if(info.value_count == 2){
                 ImVec2 value(0,0);
@@ -225,10 +255,44 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element,int32_t& pu
                         value.y = v[1];
                     }
                 }
-                ImGui::PushStyleVar(info.type,value);
-                pushed_style_var++;
+                if(setter && setter->var_setter_vec2){
+                    pushed_style_var++;
+                    setter->var_setter_vec2(info.type,value);
+                }
             }
         }
     }
     return pushed_style_color + pushed_style_var;
+}
+
+int32_t ImGuiYogaRender::load_theme(const std::string &theme_name)
+{
+    sol::state lua;
+    lua.open_libraries();
+    std::string theme_file = std::filesystem::path(mr::current_executable_dir()) / "resources" / "theme_default.lua";
+    try{
+        lua.safe_script_file(theme_file);
+        sol::optional<sol::table> theme_opt = lua[theme_name];
+        if(theme_opt != sol::nullopt){
+            YogaElement fake_theme_elemen(theme_opt.value());
+            StyleSetter theme_setter;
+            theme_setter.color_setter_uint32 = [](ImGuiCol idx, ImU32 col){
+                ImGui::GetStyle().Colors[idx] = ImGui::ColorConvertU32ToFloat4(col);
+            };
+            theme_setter.color_setter_vec4 = [](ImGuiCol idx, const ImVec4& col) -> void{
+                ImGui::GetStyle().Colors[idx] = col;
+            };
+            theme_setter.var_setter_float = [](ImGuiStyleVar idx, float val){};
+            theme_setter.var_setter_vec2 = [](ImGuiStyleVar idx, const ImVec2& val){};
+
+            int32_t pushed_style_color = 0;
+            int32_t pushed_style_var = 0;
+            element_push_style_var(fake_theme_elemen,pushed_style_color,pushed_style_var,&theme_setter);
+        }
+    }
+    catch(sol::error& error){
+        fprintf(stderr,"ImGuiYogaRender, LUA RUN SCRIPT FILE %s ERROR: %s\n\t",theme_file.c_str(),error.what());
+        return -1;
+    }
+    return 0;
 }

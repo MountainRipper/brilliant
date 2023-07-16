@@ -205,7 +205,7 @@ function MainUI:init()
                         height=50,
                         widget="Button",
                         style={
-                            text="Stop",opacity=0.5,colorButton=0x0000FFFF,colorButtonHovered=0x88FF00FF,colorButtonActive=0xFFFFFF55,frameRounding=8
+                            text="Stop",opacity=0.5,colorButton=0x0000FFFF,colorButtonHovered=0x88FF00FF,colorButtonActive={1,1,1,1,255},frameRounding=8
                         },
                         onclicked = function(this)
                             self:setElementProperty("Ra","width",self:getElementProperty("Ra","width")+10)
