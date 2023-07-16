@@ -108,7 +108,6 @@ ImGuiYogaRender::ImGuiYogaRender()
 
 }
 
-
 int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
 {
 //    MR_INFO("render wiget:{} id:{} pos:{}#{}#{}#{} size:{}x{}",element.widget_,element.id_,
@@ -117,7 +116,7 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
 
     if(!theme_loaded_){
         theme_loaded_ = true;
-        load_theme("defaultTheme");
+        load_theme("simpleBlackTheme");
     }
     if(element.widget_.empty()){
         return 0;
@@ -130,11 +129,11 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
         return 0;
     }
 
-    MR_TIMER_NEW(t);
+    //MR_TIMER_NEW(t);
     int32_t pushed_style_color = 0;
     int32_t pushed_style_var = 0;
     element_push_style_var(element,pushed_style_color,pushed_style_var,&default_push_setter_);
-    MR_INFO("push style use {} us",MR_TIMER_US(t));
+    //MR_INFO("push style use {} us",MR_TIMER_US(t));
 
     ImGui::SetCursorPos(ImVec2(element.left_,element.top_) + ImGui::GetWindowContentRegionMin() );
     if(element.widget_ == "Button" || element.widget_ == "ImageButton"){
@@ -282,8 +281,22 @@ int32_t ImGuiYogaRender::load_theme(const std::string &theme_name)
             theme_setter.color_setter_vec4 = [](ImGuiCol idx, const ImVec4& col) -> void{
                 ImGui::GetStyle().Colors[idx] = col;
             };
-            theme_setter.var_setter_float = [](ImGuiStyleVar idx, float val){};
-            theme_setter.var_setter_vec2 = [](ImGuiStyleVar idx, const ImVec2& val){};
+            theme_setter.var_setter_float = [](ImGuiStyleVar idx, float val){
+                const ImGuiDataVarInfo* var_info = ImGui::GetStyleVarInfo(idx);
+                if (var_info->Type == ImGuiDataType_Float && var_info->Count == 1)
+                {
+                    float* pvar = (float*)var_info->GetVarPtr(&ImGui::GetStyle());
+                    *pvar = val;
+                }
+            };
+            theme_setter.var_setter_vec2 = [](ImGuiStyleVar idx, const ImVec2& val){
+                const ImGuiDataVarInfo* var_info = ImGui::GetStyleVarInfo(idx);
+                if (var_info->Type == ImGuiDataType_Float && var_info->Count == 2)
+                {
+                    ImVec2* pvar = (ImVec2*)var_info->GetVarPtr(&ImGui::GetStyle());
+                    *pvar = val;
+                }
+            };
 
             int32_t pushed_style_color = 0;
             int32_t pushed_style_var = 0;
