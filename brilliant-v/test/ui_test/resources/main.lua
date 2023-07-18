@@ -82,6 +82,7 @@ keywordsHint={
     Button={
     },
     Image={
+        round=5
     },
     ImageButton={
     },
@@ -168,7 +169,7 @@ function MainUI:init()
                 height=128,
                 widget="Image",
                 style={
-                    image="document-page-setup.png",opacity=0.5,color=0xFF0000FF,colorBackGround=0x88FF00FF
+                    image="document-page-setup.png",color=0xFFFFFFFF,colorBackGround=0x88FF00FF
                 }
             },
             {
@@ -205,7 +206,7 @@ function MainUI:init()
                         height=50,
                         widget="Button",
                         style={
-                            text="Stop",opacity=0.5,colorButton=0x0000FFFF,colorButtonHovered=0x88FF00FF,colorButtonActive={1,1,1,1,255},frameRounding=8
+                            text="Stop",opacity=0.5,colorButton=0x0000FFFF,colorButtonHovered=0x88FF00FF,colorButtonActive={64,64,64,64},frameRounding=5
                         },
                         onclicked = function(this)
                             self:setElementProperty("Ra","width",self:getElementProperty("Ra","width")+10)
@@ -232,14 +233,147 @@ function MainUI:init()
                 }
             },
             {
-                id="Ra",
-                width=128,
-                height=128,
-                widget="ImageButton",
+                id="rectFrame",
+                widget="RectangleFrame",
+                width = "100%",
+                height = 200,
+                paddingAll = 20,
                 style={
-                    image="mail-message-new.png",opacity=0.5,color=0xFF0000FF,colorHovered=0x88FF00FF
+                    color=0xFF000055,frameRounding=20,frameWidth=4
+                },
+                elements = {
+                    {
+                        id="Ra",
+                        width=128,
+                        height=128,
+                        widget="RoundImageButton",
+                        style={
+                            image="mail-message-new.png",colorButton=0xFFFFFFAA,frameRounding=50
+                        }
+                    },
+                    {
+                        id="Img",
+                        width=100,
+                        height=100,
+                        widget="Image",
+                        style={
+                            image="appointment-new.png",color=0xFF000055,frameRounding=50
+                        }
+                    },
+                    {
+                        id="rect",
+                        width=400,
+                        height=120,
+                        widget="Rectangle",
+                        style={
+                            color=0xFF000088,frameRounding=50
+                        },
+                        elements ={
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                positionType="absolute",
+                                style={
+                                    text="TC",
+                                    aliginH = "left",
+                                    aliginV = "top"
+                                }
+                            },
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                positionType="absolute",
+                                style={
+                                    text="LC",
+                                    aliginH = "left",
+                                    aliginV = "center",
+                                }
+                            },
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                positionType="absolute",
+                                style={
+                                    text="LB",
+                                    aliginH = "left",
+                                    aliginV = "bottom"
+                                }
+                            },
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                positionType="absolute",
+                                style={
+                                    text="CT",
+                                    aliginH = "center",
+                                    aliginV = "top"
+                                }
+                            },
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                positionType="absolute",
+                                style={
+                                    text="Center",
+                                    aliginH = "center",
+                                    aliginV = "center"
+                                }
+                            },
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                style={
+                                    text="CB",
+                                    aliginH = "center",
+                                    aliginV = "bottom"
+                                }
+                            },
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                positionType="absolute",
+                                style={
+                                    text="RT",
+                                    aliginH = "right",
+                                    aliginV = "top"
+                                }
+                            },
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                positionType="absolute",
+                                style={
+                                    text="RC",
+                                    aliginH = "right",
+                                    aliginV = "center"
+                                }
+                            },
+                            {
+                                width="100%",
+                                height="100%",
+                                widget="Text",
+                                positionType="absolute",
+                                style={
+                                    text="RB",
+                                    aliginH = "right",
+                                    aliginV = "bottom"
+                                }
+                            }
+
+                        }
+                    },
+
                 }
             },
+
         }
     }
 end

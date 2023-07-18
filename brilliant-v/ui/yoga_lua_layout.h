@@ -11,6 +11,7 @@ class YogaElement;
 
 typedef std::variant<double,bool,std::string,std::vector<double>,std::vector<std::string>,void*> StyleValue;
 typedef std::function<void(YogaElement&)> ElementOperator;
+
 #define kStyleValueNumberIndex 0
 #define kStyleValueBooleanIndex 1
 #define kStyleValueStringIndex 2
@@ -54,6 +55,8 @@ TYPE_ALIAS style_value(const std::string& name,TYPE_ALIAS default_value,bool* ex
     return static_cast<TYPE_ALIAS>(std::get<TYPE>(it->second)); \
 }
 
+#define UINT32_SWAP_ENDIAN(u32) u32 = (u32 >> 24) | ((u32<<8) & 0x00FF0000) | ((u32>>8) & 0x0000FF00) | (u32 << 24);
+
 class noncopyable
 {
 private:
@@ -94,6 +97,8 @@ public:
 
     void emit_event(const std::string& event);
 
+    uint32_t style_color(const std::string& style,uint32_t defalt_value = 0xFF000000,bool* exist = nullptr);
+    uint32_t style_value_color(const StyleValue& value, uint32_t defalt_value = 0xFF000000);
 public:
     static int32_t parse_node(sol::table& element_table, YGNode *node);
     static int32_t parse_widget(sol::table& element_table, YogaElement &element_self);

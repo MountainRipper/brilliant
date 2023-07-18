@@ -8,9 +8,6 @@
 #include <sol/sol.hpp>
 #include "imgui_yoga_render.h"
 
-
-#define SWAP_ENDIAN(u32) u32 = (u32 >> 24) | ((u32<<8) & 0x00FF0000) | ((u32>>8) & 0x0000FF00) | (u32 << 24);
-
 struct ImGuiStyleVarInfo{
     uint8_t value_count;
     ImGuiStyleVar_ type;
@@ -116,7 +113,7 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
 
     if(!theme_loaded_){
         theme_loaded_ = true;
-        load_theme("simpleBlackTheme");
+        load_theme("adobeLightTheme");
     }
     if(element.widget_.empty()){
         return 0;
@@ -136,33 +133,71 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
     //MR_INFO("push style use {} us",MR_TIMER_US(t));
 
     ImGui::SetCursorPos(ImVec2(element.left_,element.top_) + ImGui::GetWindowContentRegionMin() );
-    if(element.widget_ == "Button" || element.widget_ == "ImageButton"){
-        int32_t pushed_count = 0;
+    if(element.widget_ == "Button" || element.widget_ == "ImageButton" ||  element.widget_ == "RoundImageButton"){
 
+        uint32_t color = element.style_color("colorButton",0xFFFFFFFF);
         bool clicked = false;
         if(element.widget_ == "Button")
             clicked = ImGui::Button(element.style_value("text","").c_str(),size);
-        else
-            clicked = mrui::ImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size);ImGui::SameLine();
-
-        if(pushed_count)
-            ImGui::PopStyleColor(pushed_count);
+        else if(element.widget_ == "ImageButton"){
+            clicked = mrui::ImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size,ImVec4(0,0,0,0),ImGui::ColorConvertU32ToFloat4(color));
+        }
+        else if(element.widget_ == "RoundImageButton"){
+            float radius = element.style_value("frameRounding",double(0),nullptr);
+            clicked = mrui::RoundImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size,ImGui::ColorConvertU32ToFloat4(color),radius);
+        }
 
         if(clicked){
             element.emit_event("onclicked");
         }
     }
     else if(element.widget_ == "Image"){
-        mrui::Image(element.style_value("image","").c_str(),NULL,size);ImGui::SameLine();
+        bool exist = false;
+        float radius = element.style_value("frameRounding",double(0),&exist);
+        uint32_t color = element.style_color("color",0xFFFFFFFF);
+        if(radius > 0){
+            mrui::ImageRound(element.style_value("image","").c_str(),NULL,size,radius,ImGui::ColorConvertU32ToFloat4(color));
+        }
+        else{
+            mrui::Image(element.style_value("image","").c_str(),NULL,size,ImGui::ColorConvertU32ToFloat4(color));
+        }
     }
     if(element.widget_ == "Text"){
-        ImGui::SetNextItemWidth(element.width_);
-        ImGui::Text("%s", element.style_value("text","").c_str());
+        //ImGui::SetNextItemWidth(element.width_);
+        //ImGui::Text("%s", element.style_value("text","").c_str());
+        std::string aligin_h = element.style_value("aliginH",std::string("left"));
+        std::string aligin_v = element.style_value("aliginV",std::string("top"));
+        int i_aligin_h = 0;
+        if(aligin_h == "center")
+            i_aligin_h = 1;
+        else if(aligin_h == "right")
+            i_aligin_h = 2;
+
+        int i_aligin_v = 0;
+        if(aligin_v == "center")
+            i_aligin_v = 1;
+        else if(aligin_v == "bottom")
+            i_aligin_v = 2;
+
+        mrui::TextAligined(element.style_value("text","").c_str(),size,i_aligin_h,i_aligin_v);
     }
     else if(element.widget_ == "Slider"){
         static float a = 0;
         ImGui::SetNextItemWidth(element.width_);
         ImGui::SliderFloat(element.id_.c_str(),&a,0,100);
+    }
+    else if(element.widget_ == "RectangleFrame"){
+        bool exist = false;
+        float radius = element.style_value("frameRounding",double(0),&exist);
+        float frame_width = element.style_value("frameWidth",double(1),&exist);
+        uint32_t color = element.style_color("color");
+        mrui::RectangleFrame(size,color,radius,frame_width);
+    }
+    else if(element.widget_ == "Rectangle"){
+        bool exist = false;
+        float radius = element.style_value("frameRounding",double(0),&exist);
+        uint32_t color = element.style_color("color");
+        mrui::Rectangle(size,color,radius);
     }
 
     if(pushed_style_color)
@@ -193,36 +228,43 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element, int32_t& p
 
         auto color_it = map_style_color_name.find(style.first);
         if(color_it != map_style_color_name.end() ){
-            if(style_value.index() == kStyleValueNumberIndex){
-                uint32_t color = std::get<double>(style_value);
-                SWAP_ENDIAN(color)
-                if(setter && setter->color_setter_uint32){
-                    pushed_style_color++;
-                    setter->color_setter_uint32(color_it->second,color);
-                }
+
+            uint32_t color = element.style_value_color(style_value);
+            if(setter && setter->color_setter_uint32){
+                pushed_style_color++;
+                setter->color_setter_uint32(color_it->second,color);
             }
-            else if(style_value.index() == kStyleValueNumberArrayIndex){
-                auto v = std::get<std::vector<double>>(style_value);
-                if(v.empty())
-                    continue;
-                ImVec4 value(0,0,0,1);
-                float* walker = (float*)&value;
-                int count = std::min(v.size(),(size_t)4);
-                float float_div = 1;
-                for(auto item : v){
-                    //use int for color values,if need int color{1,1,1,1}, use {1,1,1,1,255}
-                    if(item > 1.0001){
-                        float_div = 255;break;
-                    }
-                }
-                for(int index = 0;index < count; index++){
-                    *walker++ = v[index] / float_div;
-                }
-                if(setter && setter->color_setter_vec4){
-                    pushed_style_color++;
-                    setter->color_setter_vec4(color_it->second,value);
-                }
-            }
+
+//            if(style_value.index() == kStyleValueNumberIndex){
+//                uint32_t color = std::get<double>(style_value);
+//                UINT32_SWAP_ENDIAN(color)
+//                if(setter && setter->color_setter_uint32){
+//                    pushed_style_color++;
+//                    setter->color_setter_uint32(color_it->second,color);
+//                }
+//            }
+//            else if(style_value.index() == kStyleValueNumberArrayIndex){
+//                auto v = std::get<std::vector<double>>(style_value);
+//                if(v.empty())
+//                    continue;
+//                ImVec4 value(0,0,0,1);
+//                float* walker = (float*)&value;
+//                int count = std::min(v.size(),(size_t)4);
+//                float float_div = 1;
+//                for(auto item : v){
+//                    //use int for color values,if need int color{1,1,1,1}, use {1,1,1,1,255}
+//                    if(item > 1.0001){
+//                        float_div = 255;break;
+//                    }
+//                }
+//                for(int index = 0;index < count; index++){
+//                    *walker++ = v[index] / float_div;
+//                }
+//                if(setter && setter->color_setter_vec4){
+//                    pushed_style_color++;
+//                    setter->color_setter_vec4(color_it->second,value);
+//                }
+//            }
             continue;
         }
 

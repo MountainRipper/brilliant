@@ -244,6 +244,50 @@ void YogaElement::emit_event(const std::string &event)
     }
 }
 
+uint32_t YogaElement::style_color(const std::string &style, uint32_t defalt_value, bool *exist)
+{
+    if(exist)
+        *exist = false;
+    auto color_it = styles_.find(style);
+    if(color_it != styles_.end() ){
+        auto& style_value = color_it->second;
+        if(exist)
+            *exist = false;
+        return style_value_color(style_value,defalt_value);
+    }
+    return defalt_value;
+}
+
+uint32_t YogaElement::style_value_color(const StyleValue &value,uint32_t defalt_value)
+{
+    if(value.index() == kStyleValueNumberIndex){
+        uint32_t color = std::get<double>(value);
+        UINT32_SWAP_ENDIAN(color)
+        return color;
+    }
+    else if(value.index() == kStyleValueNumberArrayIndex){
+        uint32_t color = 0xFF000000;
+        auto v = std::get<std::vector<double>>(value);
+        if(v.empty())
+            return color;
+
+        uint8_t* walker = (uint8_t*)&color;
+        float float_multiply = 255;
+        for(auto item : v){
+            //use int for color values,if need int color{1,1,1,1}, use {1,1,1,1,255}
+            if(item > 1.0001){
+                float_multiply = 1;break;
+            }
+        }
+        int count = std::min(v.size(),(size_t)4);
+        for(int index = 0;index < count; index++){
+            *walker++ = v[index] * float_multiply;
+        }
+        return color;
+    }
+    return defalt_value;
+}
+
 
 int32_t YogaElement::parse_widget(sol::table &element_table, YogaElement &element_self)
 {
@@ -483,6 +527,6 @@ int32_t YogaLuaLayout::render_frame()
     };
     renderer_caller(*this);
 
-    MR_INFO("render frame use {} ms",MR_TIMER_MS(t));
+    //MR_INFO("render frame use {} ms",MR_TIMER_MS(t));
     return 0;
 }

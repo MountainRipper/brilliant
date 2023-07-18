@@ -478,6 +478,108 @@ simpleBlackTheme = {
     }
 }
 
+adobeLightTheme = {
+    widget="Theme",
+    style={
+        grabRounding = 4.0,
+
+        colorText                  = {0.294, 0.294, 0.294, 1.000},
+        colorTextDisabled          = {0.702, 0.702, 0.702, 1.000},
+        colorWindowBg              = {0.961, 0.961, 0.961, 1.000},
+        colorChildBg               = {0.000, 0.000, 0.000, 0.000},
+        colorPopupBg               = {1.000, 1.000, 1.000, 1.000},
+        colorBorder                = {0.882, 0.882, 0.882, 1.000},
+        colorBorderShadow          = {0.000, 0.000, 0.000, 0.000},
+        colorFrameBg               = {0.980, 0.980, 0.980, 1.000},
+        colorFrameBgHovered        = {1.000, 1.000, 1.000, 1.000},
+        colorFrameBgActive         = {0.918, 0.918, 0.918, 1.000},
+        colorTitleBg               = {0.882, 0.882, 0.882, 1.000},
+        colorTitleBgActive         = {0.918, 0.918, 0.918, 1.000},
+        colorTitleBgCollapsed      = {0.792, 0.792, 0.792, 1.000},
+        colorMenuBarBg             = {0.961, 0.961, 0.961, 1.000},
+        colorScrollbarBg           = {0.961, 0.961, 0.961, 1.000},
+        colorScrollbarGrab         = {0.792, 0.792, 0.792, 1.000},
+        colorScrollbarGrabHovered  = {0.557, 0.557, 0.557, 1.000},
+        colorScrollbarGrabActive   = {0.439, 0.439, 0.439, 1.000},
+        colorCheckMark             = {0.078, 0.451, 0.902, 1.000},
+        colorSliderGrab            = {0.439, 0.439, 0.439, 1.000},
+        colorSliderGrabActive      = {0.294, 0.294, 0.294, 1.000},
+        colorButton                = {0.980, 0.980, 0.980, 1.000},
+        colorButtonHovered         = {1.000, 1.000, 1.000, 1.000},
+        colorButtonActive          = {0.918, 0.918, 0.918, 1.000},
+        colorHeader                = {0.149, 0.502, 0.922, 1.000},
+        colorHeaderHovered         = {0.078, 0.451, 0.902, 1.000},
+        colorHeaderActive          = {0.051, 0.400, 0.816, 1.000},
+        colorSeparator             = {0.792, 0.792, 0.792, 1.000},
+        colorSeparatorHovered      = {0.557, 0.557, 0.557, 1.000},
+        colorSeparatorActive       = {0.439, 0.439, 0.439, 1.000},
+        colorResizeGrip            = {0.792, 0.792, 0.792, 1.000},
+        colorResizeGripHovered     = {0.557, 0.557, 0.557, 1.000},
+        colorResizeGripActive      = {0.439, 0.439, 0.439, 1.000},
+        colorPlotLines             = {0.149, 0.502, 0.922, 1.000},
+        colorPlotLinesHovered      = {0.051, 0.400, 0.816, 1.000},
+        colorPlotHistogram         = {0.149, 0.502, 0.922, 1.000},
+        colorPlotHistogramHovered  = {0.051, 0.400, 0.816, 1.000},
+        colorTextSelectedBg        = {0.149, 0.502, 0.922, 0.200},
+        colorDragDropTarget        = {1.000, 1.000, 0.000, 0.900},
+        colorNavHighlight          = {0.173, 0.173, 0.173, 0.039},
+        colorNavWindowingHighlight = {1.000, 1.000, 1.000, 0.700},
+        colorNavWindowingDimBg     = {0.800, 0.800, 0.800, 0.200},
+        colorModalWindowDimBg      = {0.200, 0.200, 0.200, 0.350}
+    }
+}
+
+adobeDarkTheme = {
+    widget="Theme",
+    style={
+        grabRounding = 4.0,
+
+        colorText                  = {0.804, 0.804, 0.804, 1.000},
+        colorTextDisabled          = {0.361, 0.361, 0.361, 1.000},
+        colorWindowBg              = {0.196, 0.196, 0.196, 1.000},
+        colorChildBg               = {0.000, 0.000, 0.000, 0.000},
+        colorPopupBg               = {0.145, 0.145, 0.145, 1.000},
+        colorBorder                = {0.243, 0.243, 0.243, 1.000},
+        colorBorderShadow          = {0.000, 0.000, 0.000, 0.000},
+        colorFrameBg               = {0.184, 0.184, 0.184, 1.000},
+        colorFrameBgHovered        = {0.145, 0.145, 0.145, 1.000},
+        colorFrameBgActive         = {0.224, 0.224, 0.224, 1.000},
+        colorTitleBg               = {0.243, 0.243, 0.243, 1.000},
+        colorTitleBgActive         = {0.224, 0.224, 0.224, 1.000},
+        colorTitleBgCollapsed      = {0.302, 0.302, 0.302, 1.000},
+        colorMenuBarBg             = {0.196, 0.196, 0.196, 1.000},
+        colorScrollbarBg           = {0.196, 0.196, 0.196, 1.000},
+        colorScrollbarGrab         = {0.302, 0.302, 0.302, 1.000},
+        colorScrollbarGrabHovered  = {0.482, 0.482, 0.482, 1.000},
+        colorScrollbarGrabActive   = {0.600, 0.600, 0.600, 1.000},
+        colorCheckMark             = {0.216, 0.557, 0.941, 1.000},
+        colorSliderGrab            = {0.600, 0.600, 0.600, 1.000},
+        colorSliderGrabActive      = {0.804, 0.804, 0.804, 1.000},
+        colorButton                = {0.184, 0.184, 0.184, 1.000},
+        colorButtonHovered         = {0.145, 0.145, 0.145, 1.000},
+        colorButtonActive          = {0.224, 0.224, 0.224, 1.000},
+        colorHeader                = {0.149, 0.502, 0.922, 1.000},
+        colorHeaderHovered         = {0.216, 0.557, 0.941, 1.000},
+        colorHeaderActive          = {0.294, 0.612, 0.961, 1.000},
+        colorSeparator             = {0.302, 0.302, 0.302, 1.000},
+        colorSeparatorHovered      = {0.482, 0.482, 0.482, 1.000},
+        colorSeparatorActive       = {0.600, 0.600, 0.600, 1.000},
+        colorResizeGrip            = {0.302, 0.302, 0.302, 1.000},
+        colorResizeGripHovered     = {0.482, 0.482, 0.482, 1.000},
+        colorResizeGripActive      = {0.600, 0.600, 0.600, 1.000},
+        colorPlotLines             = {0.149, 0.502, 0.922, 1.000},
+        colorPlotLinesHovered      = {0.294, 0.612, 0.961, 1.000},
+        colorPlotHistogram         = {0.149, 0.502, 0.922, 1.000},
+        colorPlotHistogramHovered  = {0.294, 0.612, 0.961, 1.000},
+        colorTextSelectedBg        = {0.149, 0.502, 0.922, 0.200},
+        colorDragDropTarget        = {1.000, 1.000, 0.000, 0.900},
+        colorNavHighlight          = {1.000, 1.000, 1.000, 0.039},
+        colorNavWindowingHighlight = {1.000, 1.000, 1.000, 0.700},
+        colorNavWindowingDimBg     = {0.800, 0.800, 0.800, 0.200},
+        colorModalWindowDimBg      = {0.200, 0.200, 0.200, 0.350}
+    }
+}
+
 function makeVariantThemes()
 
 end

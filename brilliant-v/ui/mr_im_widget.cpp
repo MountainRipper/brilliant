@@ -169,6 +169,9 @@ const std::map<std::string, TextureHolder::Image> &TextureHolder::all_images()
 {
     return images_;
 }
+
+
+
 #if defined(MR_UI_WITH_TIO)
 std::map<std::string,mr::tio::GraphicTexture>  TextureHolder::textures_;
 
@@ -203,6 +206,18 @@ void Image(const char* image,const char* sub_image,const ImVec2& size, const ImV
     auto image_info = TextureHolder::get(image_key);
     ImGui::Image(image_info.texture,size,image_info.top_left(),image_info.bottom_right(),tint_col,border_col);
 }
+
+void ImageRound(const char *image, const char *sub_image, const ImVec2 &size, float round, const ImVec4 &tint_col, const ImVec4 &border_col)
+{
+    std::string image_key = image;
+    if(sub_image)
+        image_key = image_key + ":" + sub_image;
+    auto image_info = TextureHolder::get(image_key);
+    auto min = ImGui::GetCursorPos() + ImGui::GetCurrentWindow()->Pos;
+    auto max = min + size;
+    ImGui::GetWindowDrawList()->AddImageRounded(image_info.texture,min,max,image_info.top_left(),image_info.bottom_right(),ImGui::ColorConvertFloat4ToU32(tint_col),round);
+}
+
 bool ImageButton(const char* str_id, const char* image,const char* sub_image, const ImVec2& size, const ImVec4& bg_col, const ImVec4& tint_col){    
     std::string image_key = image;
     if(sub_image)
@@ -212,15 +227,59 @@ bool ImageButton(const char* str_id, const char* image,const char* sub_image, co
     return ImGui::ImageButton(str_id,image_info.texture,size,image_info.top_left(),image_info.bottom_right(),bg_col,tint_col);
 }
 
+bool RoundImageButton(const char* str_id,const char *image, const char *sub_image, const ImVec2 &size, const ImVec4& tint_col,float round)
+{
+    std::string image_key = image;
+    if(sub_image)
+        image_key = image_key + ":" + sub_image;
+    auto image_info = TextureHolder::get(image_key);
+    auto cur_pos = ImGui::GetCursorPos();
+    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos;
+    auto max = min + size;
+    bool clicked = ImGui::InvisibleButton(str_id,size);
+    ImGui::SetCursorPos(cur_pos);
+    bool hoverd = ImGui::IsItemHovered();
+    bool actived = ImGui::IsItemActive();
+    ImVec4 color_hover = tint_col;color_hover.w *= 0.8;
+    ImVec4 color = actived ? tint_col : (hoverd ? color_hover : tint_col);
+    ImGui::GetWindowDrawList()->AddImageRounded(image_info.texture,min,max,image_info.top_left(),image_info.bottom_right(),ImGui::ColorConvertFloat4ToU32(color),round);
+    return clicked;
+}
+
+void RectangleFrame(const ImVec2 &size, ImU32 color,float round,float width)
+{
+    auto cur_pos = ImGui::GetCursorPos();
+    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos;
+    auto max = min + size;
+    ImGui::GetWindowDrawList()->AddRect(min,max,color,round,0,width);
+}
+
+void Rectangle(const ImVec2 &size, ImU32 color, float round)
+{
+    auto cur_pos = ImGui::GetCursorPos();
+    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos;
+    auto max = min + size;
+    ImGui::GetWindowDrawList()->AddRectFilled(min,max,color,round,0);
+}
+
 #define kDragDeltaSumSize 3
 void DragScrollCurrentWindow(bool& draged, int mouse_button, float release_speed, float decelerate_factor, bool scroll_y, bool scroll_x)
 {
-    ImVec2 mouse_delta = ImGui::GetIO().MouseDelta;
-    mouse_delta.x *= -1;
-    mouse_delta.y *= -1;
-
     ImGuiContext& g = *ImGui::GetCurrentContext();
     ImGuiWindow* window = g.CurrentWindow;
+
+    bool hovered = false;
+    bool held = false;
+    ImGuiButtonFlags button_flags = (mouse_button == 0) ? ImGuiButtonFlags_MouseButtonLeft : (mouse_button == 1) ? ImGuiButtonFlags_MouseButtonRight : ImGuiButtonFlags_MouseButtonMiddle;
+    if (g.HoveredId == 0) // If nothing hovered so far in the frame (not same as IsAnyItemHovered()!)
+        ImGui::ButtonBehavior(window->Rect(), window->GetID("##scrolldraggingoverlay"), &hovered, &held, button_flags);
+
+    held = ImGui::IsWindowFocused();
+    if(!held)
+        return;
+    held &= ImGui::IsMouseHoveringRect(window->Rect().GetTL(),window->Rect().GetBR());
+    bool mouse_down = ImGui::GetIO().MouseDown[mouse_button];
+    bool held_current = held & mouse_down;
 
     struct DragInfo{
         bool draged = false;
@@ -239,16 +298,10 @@ void DragScrollCurrentWindow(bool& draged, int mouse_button, float release_speed
     }
     DragInfo& drag_info = window_drag_info[window->ID];
 
-    bool hovered = false;
-    bool held = false;
-    ImGuiButtonFlags button_flags = (mouse_button == 0) ? ImGuiButtonFlags_MouseButtonLeft : (mouse_button == 1) ? ImGuiButtonFlags_MouseButtonRight : ImGuiButtonFlags_MouseButtonMiddle;
-    if (g.HoveredId == 0) // If nothing hovered so far in the frame (not same as IsAnyItemHovered()!)
-        ImGui::ButtonBehavior(window->Rect(), window->GetID("##scrolldraggingoverlay"), &hovered, &held, button_flags);
+    ImVec2 mouse_delta = ImGui::GetIO().MouseDelta;
+    mouse_delta.x *= -1;
+    mouse_delta.y *= -1;
 
-    held = ImGui::IsMouseHoveringRect(window->Rect().GetTL(),window->Rect().GetBR());
-    bool mouse_down = ImGui::GetIO().MouseDown[mouse_button];
-
-    bool held_current = held & mouse_down;
     if (held_current && scroll_x && mouse_delta.x != 0.0f){
         ImGui::SetScrollX(window, window->Scroll.x + mouse_delta.x);
         if(drag_info.draged == false && abs(mouse_delta.x) > 2)
@@ -272,8 +325,6 @@ void DragScrollCurrentWindow(bool& draged, int mouse_button, float release_speed
         sum = 0;
         ARRARY_SUM_CLEAR(drag_info.delta_y_sum_,kDragDeltaSumSize,sum);
         drag_info.last_delta_y = sum / kDragDeltaSumSize * release_speed;
-
-
     }
 
     if(drag_info.last_delta_y != 0){
@@ -325,6 +376,30 @@ void ImRotateEnd(float rad, ImVec2 center)
     for (int i = g_rotation_start_index; i < buf.Size; i++)
         buf[i].pos = ImRotate(buf[i].pos, s, c) - center;
 }
+
+void TextAligined(const char *str, const ImVec2 &size, int aligin_h, int aligin_v)
+{
+    ImVec2 text_size = ImGui::CalcTextSize(str);
+    int x = 0;
+    int y = 0;
+    if(aligin_h == 1)
+        x = (size.x - text_size.x) / 2;
+    else if(aligin_h == 2)
+        x = size.x - text_size.x;
+
+    if(aligin_v == 1)
+        y = (size.y - text_size.y) / 2;
+    else if(aligin_v == 2)
+        y = size.y - text_size.y;
+
+    auto cur_pos = ImGui::GetCursorPos();
+    cur_pos += ImVec2(x,y);
+    ImGui::SetCursorPos(cur_pos);
+    ImGui::Text("%s", str);
+}
+
+
+
 
 #endif
 
