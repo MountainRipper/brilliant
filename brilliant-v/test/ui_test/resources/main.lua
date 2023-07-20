@@ -153,120 +153,416 @@ oo.class("MainUI", Layout)
 function MainUI:init()
 
     self.ui={
-        id="root",
-        flexDirection="column",
+        id="root",        
         widget="Window",
         style={
         },
 
-        width="100%",
-        height="100%",
+        width=1024,
+        height="auto",
 
         elements={
             {
-                id="L",
-                width=128,
-                height=128,
-                widget="Image",
-                style={
-                    image="document-page-setup.png",color=0xFFFFFFFF,colorBackGround=0x88FF00FF
-                }
-            },
-            {
-                id="C",
-                height=50,
-                alignItems="center",
-                marginTop=10,
-                marginBottom=10,
---                flexDirection="column",
+                widget="ChildWindow",
+                width="100%",
+                height="100%",
+                flexDirection="column",
                 elements={
                     {
-                        id="btn1",
-                        width=100,
-                        height=50,
-                        widget="Button",
-                        style={
-                            text="Play",opacity=0.5,colorButton=0xFF0000FF,colorButtonHovered=0x88FF00FF
-                        }
+                        width=10,
+                        height=40,
+                        widget="Text",
+                        style={text="Images"}
                     },
                     {
-                        id="btn2",
-                        width=200,
-                        height=50,
-                        marginLeft=10,
-                        marginRight=10,
-                        widget="Button",
-                        style={
-                            text="Pause",opacity=0.5,colorButton=0x00FF00FF,colorButtonHovered=0x88FF00FF
-                        }
-                    },
-                    {
-                        id="btn3",
-                        width=300,
-                        height=50,
-                        widget="Button",
-                        style={
-                            text="Stop",opacity=0.5,colorButton=0x0000FFFF,colorButtonHovered=0x88FF00FF,colorButtonActive={64,64,64,64},frameRounding=5
-                        },
-                        onclicked = function(this)
-                            self:setElementProperty("Ra","width",self:getElementProperty("Ra","width")+10)
-                            self:setElementProperty("Ra","height",self:getElementProperty("Ra","height")+10)
-                            --self:setElementStyle("btn3","opacity",self:getElementStyle("btn3","opacity")+0.1)
-                            --self.btn3.style.opacity = self.btn3.style.opacity + 0.1
-                            io.stderr:write(">>>>>>>>>>>>>>>>>>>>>>:")
-                            --io.stderr:write(">>>>>>>>>>>>>>>>>>>>>>:"..self.Ra.width.." this id:"..this.style.opacity.."\n")
-                        end
-                    },
-                }
-            },
-            {
-                height=50,
-                width=256,
-                widget="Slider",
-            },
-            {
-                height=50,
-                width=256,
-                widget="Text",
-                style={
-                    text="This is a Text",opacity=0.5,color=0xFF0000FF,colorHovered=0x88FF00FF
-                }
-            },
-            {
-                id="rectFrame",
-                widget="RectangleFrame",
-                width = "100%",
-                height = 200,
-                paddingAll = 20,
-                style={
-                    color=0xFF000055,frameRounding=20,frameWidth=4
-                },
-                elements = {
-                    {
-                        id="Ra",
-                        width=128,
                         height=128,
-                        widget="RoundImageButton",
-                        style={
-                            image="mail-message-new.png",colorButton=0xFFFFFFAA,frameRounding=50
+                        width="100%",
+                        flexDirection="row",
+                        elements={
+                            {
+                                width=128,
+                                height=128,
+                                widget="Image",
+                                style={
+                                    image="wechat.png",color=0xFFFFFFFF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                widget="Image",
+                                marginLeft=8,
+                                style={
+                                    image="effect.png",color=0xFFFFFFFF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                widget="Image",
+                                marginLeft=8,
+                                style={
+                                    image="effect.png",color=0xFF8800FF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                widget="Image",
+                                marginLeft=8,
+                                style={
+                                    image="girl.png",color=0xFFFFFFFF
+                                },
+                                elements ={
+                                    {
+                                        width="100%",
+                                        height="100%",
+                                        widget="Text",
+                                        positionType="absolute",
+                                        style={
+                                            text="Origin",
+                                            color=0xFF0000FF,
+                                            aliginH = "center",
+                                            aliginV = "center"
+                                        }
+                                    }
+                                },
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                widget="Image",
+                                marginLeft=8,
+                                style={
+                                    image="girl.png",color=0xFFFFFFFF,frameRounding=64
+                                },
+                                elements ={
+                                    {
+                                        width="100%",
+                                        height="100%",
+                                        widget="Text",
+                                        positionType="absolute",
+                                        style={
+                                            text="Round",
+                                            color=0xFF0000FF,
+                                            aliginH = "center",
+                                            aliginV = "center"
+                                        }
+                                    }
+                                },
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                widget="Image",
+                                marginLeft=8,
+                                style={
+                                    image="girl.png",color=0xFFFFFF33,frameRounding=32
+                                },
+                                elements ={
+                                    {
+                                        width="100%",
+                                        height="100%",
+                                        widget="Text",
+                                        positionType="absolute",
+                                        style={
+                                            text="Alpha",
+                                            color=0xFF0000FF,
+                                            aliginH = "center",
+                                            aliginV = "center"
+                                        }
+                                    }
+                                },
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                widget="Image",
+                                marginLeft=8,
+                                style={
+                                    image="girl.png",color=0xFF99FFFF
+                                },
+                                elements ={
+                                    {
+                                        width="100%",
+                                        height="100%",
+                                        widget="Text",
+                                        positionType="absolute",
+                                        style={
+                                            text="TintColor",
+                                            color=0xFF0000FF,
+                                            aliginH = "center",
+                                            aliginV = "center"
+                                        }
+                                    }
+                                },
+                            }
                         }
                     },
                     {
-                        id="Img",
-                        width=100,
-                        height=100,
-                        widget="Image",
-                        style={
-                            image="appointment-new.png",color=0xFF000055,frameRounding=50
+                        width=10,
+                        height=40,
+                        widget="Text",
+                        marginTop=10,
+                        style={text="Buttons"}
+                    },
+                    {
+                        height=50,
+                        width="100%",
+                        flexDirection="row",
+                        elements={
+                            {
+                                id="btn1",
+                                width=100,
+                                height=50,
+                                widget="Button",
+                                style={
+                                    text="Play",colorButton=0xFF000099,colorButtonHovered=0xFF0000AA,colorButtonActive=0xFF000055
+                                }
+                            },
+                            {
+                                id="btn2",
+                                width=300,
+                                height=50,
+                                marginLeft=10,
+                                marginRight=10,
+                                widget="Button",
+                                style={
+                                    text="Pause",colorButton=0x00FF0099,colorButtonHovered={0,1,0,0.8},colorButtonActive=0x00FF0055
+                                },
+                                onclicked = function(this)
+                                    if(this.width > 100) then
+                                        self:setElementProperty("btn2","width",self:getElementProperty("btn2","width")-20)
+                                    end
+                                end
+                            },
+                            {
+                                id="btn3",
+                                width=100,
+                                height=50,
+                                widget="Button",
+                                style={
+                                    text="Stop",colorButton=0x0055FFFF,colorButtonHovered=0x0055FFAA,colorButtonActive={0,128,255,200},frameRounding=16
+                                },
+                                onclicked = function(this)
+                                    self:setElementProperty("btn3","width",self:getElementProperty("btn3","width")+20)
+                                end
+                            },
+                            {
+                                id="btn4",
+                                width=200,
+                                height=50,
+                                marginLeft=10,
+                                marginRight=10,
+                                widget="Button",
+                                style={
+                                    text="Info",colorButton={1.0,1.0,1.0,1.0,255},colorButtonHovered={0.4,0.4,0.4,1},colorButtonActive={0.3,0.3,0.3,1},frameRounding=8
+                                }
+                            },
                         }
                     },
                     {
-                        id="rect",
-                        width=400,
+                        width=10,
+                        height=40,
+                        widget="Text",
+                        marginTop=10,
+                        style={text="ImageButtons",color=0xFF8800FF},
+                    },
+                    {
+                        height="auto",
+                        width="100%",
+                        flexDirection="row",
+                        flexWrap="wrap",
+                        elements={
+                            {
+                                width=128,
+                                height=128,
+                                widget="ImageButton",
+                                style={
+                                    image="dialog-apply.png",colorButton=0xFF8800FF,colorButtonHovered=0xFFAA00FF,colorButtonActive=0xFF8800FF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                marginLeft=20,
+                                widget="ImageButton",
+                                style={
+                                    image="wechat.png",colorButton=0xCCCCCCFF,colorButtonHovered=0xFFFFFFFF,colorButtonActive=0xCCCCCCFF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                marginLeft=20,
+                                widget="ImageButton",
+                                style={
+                                    image="wechat.png",colorButton=0xCCCCCCFF,colorButtonHovered=0xFFFFFFFF,colorButtonActive=0xCCCCCCFF,colorTint=0xFFFF00FF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                marginLeft=20,
+                                widget="RoundImageButton",
+                                style={
+                                    image="wechat.png",colorButton=0xFFFFFFFF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                marginLeft=10,
+                                widget="RoundImageButton",
+                                style={
+                                    image="wechat.png",colorButton=0xFFFFFFFF,frameRounding=64
+                                },
+                                elements ={
+                                    {
+                                        width="100%",
+                                        height="100%",
+                                        widget="Text",
+                                        positionType="absolute",
+                                        style={
+                                            text="Text",
+                                            aliginH = "center",
+                                            aliginV = "center",
+                                            color=0xFF8800FF
+                                        }
+                                    }
+                                },
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                marginLeft=10,
+                                widget="RoundImageButton",
+                                style={
+                                    image="girl.png",colorButton=0xFFFFFFFF,frameRounding=64
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                marginLeft=10,
+                                widget="RoundImageButton",
+                                style={
+                                    image="girl.png",colorButton=0xFFFFFFFF,frameRounding=64,colorTint=0xFFFF55FF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                marginLeft=10,
+                                widget="RoundImageButton",
+                                style={
+                                    image="effect.png",colorButton=0xFFFFFFFF
+                                }
+                            },
+                            {
+                                width=128,
+                                height=128,
+                                marginLeft=10,
+                                widget="RoundImageButton",
+                                style={
+                                    image="effect.png",colorButton=0xFFFFFFFF,colorTint=0x9A45F0FF
+                                }
+                            },
+                        }
+                    },
+                    {
+                        width=10,
+                        height=40,
+                        widget="Text",
+                        marginTop=10,
+                        style={text="Rectangles",color=0xFF8800FF},
+                    },
+                    {
+                        height=128,
+                        width="100%",
+                        flexDirection="row",
+                        elements={
+                            {
+                                widget="RectangleFrame",
+                                width = "20%",
+                                height = "80%",
+                                style={
+                                    color=0xFF8800FF,frameWidth=4
+                                },
+                            },
+                            {
+                                widget="RectangleFrame",
+                                width = "20%",
+                                height = "80%",
+                                marginLeft=16,
+                                style={
+                                    color=0xFF8800FF,frameRounding=20,frameWidth=8
+                                },
+                            },
+                            {
+                                widget="Rectangle",
+                                width = "20%",
+                                height = "80%",
+                                marginLeft=16,
+                                style={
+                                    color=0xFF8800FF,frameWidth=4
+                                },
+                            },
+                            {
+                                widget="Rectangle",
+                                width = "20%",
+                                height = "80%",
+                                marginLeft=16,
+                                style={
+                                    color=0xFF880088,frameRounding=20,frameWidth=4
+                                },
+                            },
+                        }
+                    },
+                    {
+                        width=10,
+                        height=40,
+                        widget="Text",
+                        style={text="Circel",color=0xFF8800FF},
+                    },
+                    {
+                        height=128,
+                        width="100%",
+                        flexDirection="row",
+                        elements={
+                            {
+                                widget="CircelFrame",
+                                width = 128,
+                                height = 128,
+                                style={
+                                    color=0xFF8800FF,frameRounding=64,frameWidth=4
+                                },
+                            },
+                            {
+                                widget="Circel",
+                                width = 128,
+                                height = 128,
+                                marginLeft=16,
+                                style={
+                                    color=0xFF8800FF,frameRounding=64
+                                },
+                            }
+                        }
+                    },
+
+                    {
+                        width=10,
+                        height=40,
+                        widget="Text",
+                        marginTop=10,
+                        style={text="TextAligin",color=0xFF8800FF},
+                    },
+                    {
+                        width="50%",
                         height=120,
                         widget="Rectangle",
                         style={
-                            color=0xFF000088,frameRounding=50
+                            color=0xFF8800FF
                         },
                         elements ={
                             {
@@ -367,19 +663,73 @@ function MainUI:init()
                                     aliginV = "bottom"
                                 }
                             }
-
                         }
                     },
-
+                    {
+                        width=10,
+                        height=40,
+                        widget="Text",
+                        marginTop=10,
+                        style={text="Input Text",color=0xFF8800FF},
+                    },
+                    {
+                        height=50,
+                        width=256,
+                        marginTop=10,
+                        widget="InputText",
+                        --style={lable="InputText"},
+                        valueChanged=function(this)
+                            io.stderr:write("TextInput value changed:"..this.nativeContext.string.."\n")
+                        end
+                    },
+                    {
+                        height=256,
+                        width=256,
+                        marginTop=10,
+                        widget="InputTextMultiline",
+                        --style={lable="InputTextMultiline"},
+                        valueChanged=function(this)
+                            io.stderr:write("InputTextMultiline value changed:"..this.nativeContext.string.."\n")
+                        end
+                    },
+                    {
+                        width=10,
+                        height=40,
+                        widget="Text",
+                        marginTop=10,
+                        style={text="Slider",color=0xFF8800FF},
+                    },
+                    {
+                        height=50,
+                        width=256,
+                        marginTop=10,
+                        widget="Slider",
+                        style={valueMin=1.0,valueMax=10.0},
+                        valueChanged=function(this)
+                            io.stderr:write("Slider value changed:"..this.nativeContext.number.."\n")
+                        end
+                    },
                 }
-            },
-
+            }
         }
     }
 end
 
+oo.class("RecordUI", Layout)
+
+function RecordUI:init()
+self.ui={
+    id="recorder",
+    flexDirection="row",
+    widget="Window",
+--    width="100%",
+    width=720,
+    height=1280,
+}
+end
 
 registerWidgets("org.mr.brilliant.MainUI", MainUI)
+registerWidgets("org.mr.brilliant.RecordUI", RecordUI)
 
 --print_dump(MainUI,"MainUI")
 --print_dump(flexDefault,"flexDefault")

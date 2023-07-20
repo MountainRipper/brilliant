@@ -584,4 +584,4 @@ function makeVariantThemes()
 
 end
 
-defaultTheme = dougblinksTheme
+defaultTheme = adobeDarkTheme

@@ -2,6 +2,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "mr_im_widget.h"
 #include <imgui.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 #include <filesystem>
 #include <mrcommon/logger.h>
 #include <mrcommon/filesystem.h>
@@ -113,16 +114,21 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
 
     if(!theme_loaded_){
         theme_loaded_ = true;
-        load_theme("adobeLightTheme");
+        load_theme("defaultTheme");
     }
     if(element.widget_.empty()){
         return 0;
     }
 
-    ImVec2 size(element.width_,element.height_);
+    ImVec2 size = element.size<ImVec2>();
 
     if(element.widget_ == "Window"){
+        //ImGui::SetNextWindowSize(size);
         ImGui::Begin(element.id_.c_str());
+        return 0;
+    }
+    if(element.widget_ == "ChildWindow"){
+        ImGui::BeginChild("__",ImVec2(1000,1000));
         return 0;
     }
 
@@ -132,19 +138,25 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
     element_push_style_var(element,pushed_style_color,pushed_style_var,&default_push_setter_);
     //MR_INFO("push style use {} us",MR_TIMER_US(t));
 
-    ImGui::SetCursorPos(ImVec2(element.left_,element.top_) + ImGui::GetWindowContentRegionMin() );
+    ImVec2 position = element.left_top<ImVec2>();
+    ImGui::SetCursorPos(position + ImGui::GetWindowContentRegionMin() );
+
+    ImGui::PushID(&element);
+
+    bool value_changed = false;
     if(element.widget_ == "Button" || element.widget_ == "ImageButton" ||  element.widget_ == "RoundImageButton"){
 
-        uint32_t color = element.style_color("colorButton",0xFFFFFFFF);
+
+        uint32_t tint_color = element.style_color("colorTint",0xFFFFFFFF);
         bool clicked = false;
         if(element.widget_ == "Button")
             clicked = ImGui::Button(element.style_value("text","").c_str(),size);
         else if(element.widget_ == "ImageButton"){
-            clicked = mrui::ImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size,ImVec4(0,0,0,0),ImGui::ColorConvertU32ToFloat4(color));
+            clicked = mrui::ImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size,ImVec4(0,0,0,0),ImGui::ColorConvertU32ToFloat4(tint_color));
         }
         else if(element.widget_ == "RoundImageButton"){
             float radius = element.style_value("frameRounding",double(0),nullptr);
-            clicked = mrui::RoundImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size,ImGui::ColorConvertU32ToFloat4(color),radius);
+            clicked = mrui::RoundImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size,ImGui::ColorConvertU32ToFloat4(tint_color),radius);
         }
 
         if(clicked){
@@ -179,31 +191,72 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
         else if(aligin_v == "bottom")
             i_aligin_v = 2;
 
-        mrui::TextAligined(element.style_value("text","").c_str(),size,i_aligin_h,i_aligin_v);
+        bool exist = false;
+        uint32_t color = element.style_color("color",0xBBBBBBFF,&exist);
+        if(!exist){
+            color = ImGui::ColorConvertFloat4ToU32( ImGui::GetStyle().Colors[ImGuiCol_Text] );
+        }
+        mrui::TextAligined(element.style_value("text","").c_str(),size,i_aligin_h,i_aligin_v,color);
+    }
+    else if(element.widget_ == "InputText" || element.widget_ == "InputTextMultiline"){
+        if(kCompatValueStringIndex != element.value_.index()){
+            element.value_ = std::string();
+        }
+        std::string &value = std::get<std::string>(element.value_);
+        std::string lable = element.style_value("lable","");
+        if(element.widget_ == "InputText"){
+            ImGui::SetNextItemWidth(element.width_);
+            value_changed = ImGui::InputText(lable.c_str(),&value);
+        }
+        else
+            value_changed = ImGui::InputTextMultiline(lable.c_str(),&value,size);
+
+        if(value_changed)MR_INFO(">>>:{}",value);
     }
     else if(element.widget_ == "Slider"){
-        static float a = 0;
+        float value_temp = std::get<double>(element.value_);
+        float value_min = element.style_value("valueMin",double(0));
+        float value_max = element.style_value("valueMax",double(1));
+        std::string format = element.style_value("valueFormat","%.2f");
         ImGui::SetNextItemWidth(element.width_);
-        ImGui::SliderFloat(element.id_.c_str(),&a,0,100);
+        value_changed = ImGui::SliderFloat(element.id_.c_str(),&value_temp,value_min,value_max,format.c_str());
+        element.value_ = double(value_temp);
     }
-    else if(element.widget_ == "RectangleFrame"){
-        bool exist = false;
-        float radius = element.style_value("frameRounding",double(0),&exist);
-        float frame_width = element.style_value("frameWidth",double(1),&exist);
-        uint32_t color = element.style_color("color");
-        mrui::RectangleFrame(size,color,radius,frame_width);
-    }
-    else if(element.widget_ == "Rectangle"){
+    else if(element.widget_ == "RectangleFrame" || element.widget_ == "Rectangle"){
         bool exist = false;
         float radius = element.style_value("frameRounding",double(0),&exist);
         uint32_t color = element.style_color("color");
-        mrui::Rectangle(size,color,radius);
+        if(element.widget_ == "RectangleFrame"){
+            float frame_width = element.style_value("frameWidth",double(1),&exist);
+            mrui::RectangleFrame(size,color,radius,frame_width);
+        }
+        else{
+            mrui::Rectangle(size,color,radius);
+        }
+    }
+    else if(element.widget_ == "CircelFrame" || element.widget_ == "Circel"){
+        bool exist = false;
+        float radius = element.style_value("frameRounding",double(0),&exist);
+        uint32_t color = element.style_color("color");
+        ImVec2 center = ImGui::GetCursorPos() + ImGui::GetCurrentWindow()->Pos + (size / 2) - ImGui::GetCurrentWindow()->Scroll;
+        if(element.widget_ == "CircelFrame"){
+            float frame_width = element.style_value("frameWidth",double(1),&exist);
+            mrui::CircelFrame(center,radius,color,frame_width);
+        }
+        else{
+            mrui::Circel(center,radius,color);
+        }
     }
 
     if(pushed_style_color)
         ImGui::PopStyleColor(pushed_style_color);
     if(pushed_style_var)
         ImGui::PopStyleVar(pushed_style_var);
+
+    ImGui::PopID();
+
+    if(value_changed)
+        element.emit_event("valueChanged");
 
     return 0;
 }
@@ -214,6 +267,8 @@ int32_t ImGuiYogaRender::after_render_elements(YogaElement &element)
         ImGui::End();
     }
     else if(element.widget_ == "ChildWindow"){
+        bool draged = false;
+        mrui::DragScrollCurrentWindow(draged,ImGuiMouseButton_Left,1,0.9,true,true);
         ImGui::EndChild();
     }
     return 0;
@@ -224,7 +279,7 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element, int32_t& p
     pushed_style_var = 0;
 
     for(auto& style : element.styles_){
-        const StyleValue& style_value = style.second;
+        const LuaCompatValue& style_value = style.second;
 
         auto color_it = map_style_color_name.find(style.first);
         if(color_it != map_style_color_name.end() ){
@@ -234,44 +289,13 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element, int32_t& p
                 pushed_style_color++;
                 setter->color_setter_uint32(color_it->second,color);
             }
-
-//            if(style_value.index() == kStyleValueNumberIndex){
-//                uint32_t color = std::get<double>(style_value);
-//                UINT32_SWAP_ENDIAN(color)
-//                if(setter && setter->color_setter_uint32){
-//                    pushed_style_color++;
-//                    setter->color_setter_uint32(color_it->second,color);
-//                }
-//            }
-//            else if(style_value.index() == kStyleValueNumberArrayIndex){
-//                auto v = std::get<std::vector<double>>(style_value);
-//                if(v.empty())
-//                    continue;
-//                ImVec4 value(0,0,0,1);
-//                float* walker = (float*)&value;
-//                int count = std::min(v.size(),(size_t)4);
-//                float float_div = 1;
-//                for(auto item : v){
-//                    //use int for color values,if need int color{1,1,1,1}, use {1,1,1,1,255}
-//                    if(item > 1.0001){
-//                        float_div = 255;break;
-//                    }
-//                }
-//                for(int index = 0;index < count; index++){
-//                    *walker++ = v[index] / float_div;
-//                }
-//                if(setter && setter->color_setter_vec4){
-//                    pushed_style_color++;
-//                    setter->color_setter_vec4(color_it->second,value);
-//                }
-//            }
             continue;
         }
 
         auto var_it = map_style_var_name.find(style.first);
         if(var_it != map_style_var_name.end()){
             const ImGuiStyleVarInfo& info = var_it->second;
-            if(info.value_count == 1 && style_value.index() == kStyleValueNumberIndex){
+            if(info.value_count == 1 && style_value.index() == kCompatValueNumberIndex){
                 if(setter && setter->var_setter_float){
                     pushed_style_var++;
                     float value = std::get<double>(style_value);
@@ -280,11 +304,11 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element, int32_t& p
             }
             else if(info.value_count == 2){
                 ImVec2 value(0,0);
-                if(style_value.index() == kStyleValueNumberIndex){
+                if(style_value.index() == kCompatValueNumberIndex){
                     auto v = std::get<double>(style_value);
                     value.x = value.y = v;
                 }
-                else if(style_value.index() == kStyleValueNumberArrayIndex){
+                else if(style_value.index() == kCompatValueNumberArrayIndex){
                     auto v = std::get<std::vector<double>>(style_value);
                     if(v.empty())
                         continue;

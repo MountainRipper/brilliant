@@ -64,8 +64,8 @@ inline YGValue LUA_YG_VALUE(sol::table &table, std::string_view name){
     return value;
 }
 
-StyleValue lua_get_style_value(sol::lua_value& value){
-    StyleValue property_value;
+LuaCompatValue lua_get_style_value(sol::lua_value& value){
+    LuaCompatValue property_value;
     switch (value.value().get_type()) {
     case sol::type::number:property_value = value.as<double>();break;
     case sol::type::string:property_value = value.as<std::string>();break;
@@ -218,9 +218,6 @@ int32_t YogaElement::get_back_position(float parent_x, float parent_y)
     top_ = YGNodeLayoutGetTop(node_) + parent_y;
     width_ = YGNodeLayoutGetWidth(node_);
     height_ = YGNodeLayoutGetHeight(node_);
-
-    right_ = left_ + width_;
-    bottom_ = top_ + height_;
     return 0;
 }
 
@@ -252,20 +249,20 @@ uint32_t YogaElement::style_color(const std::string &style, uint32_t defalt_valu
     if(color_it != styles_.end() ){
         auto& style_value = color_it->second;
         if(exist)
-            *exist = false;
+            *exist = true;
         return style_value_color(style_value,defalt_value);
     }
     return defalt_value;
 }
 
-uint32_t YogaElement::style_value_color(const StyleValue &value,uint32_t defalt_value)
+uint32_t YogaElement::style_value_color(const LuaCompatValue &value,uint32_t defalt_value)
 {
-    if(value.index() == kStyleValueNumberIndex){
+    if(value.index() == kCompatValueNumberIndex){
         uint32_t color = std::get<double>(value);
         UINT32_SWAP_ENDIAN(color)
         return color;
     }
-    else if(value.index() == kStyleValueNumberArrayIndex){
+    else if(value.index() == kCompatValueNumberArrayIndex){
         uint32_t color = 0xFF000000;
         auto v = std::get<std::vector<double>>(value);
         if(v.empty())
@@ -311,6 +308,9 @@ int32_t YogaElement::parse_widget(sol::table &element_table, YogaElement &elemen
         element_self.id_ = id_opt.value();
     }
 
+    if(element_self.widget_ == "TextInput"){
+
+    }
     return 0;
 }
 
@@ -467,7 +467,18 @@ int32_t YogaLuaLayout::foreach_elements(ElementOperator visitor)
 
 int32_t YogaLuaLayout::refresh_position_all()
 {
-    YGNodeCalculateLayout(node_, 1000, 1000, YGDirectionLTR);
+    auto width_def = LUA_YG_VALUE(lua_var_,"width");
+    auto height_def = LUA_YG_VALUE(lua_var_,"height");
+
+    int width = 1000;
+    int height = 1000;
+
+
+    if(width_def.unit == YGUnitPercent){
+
+    }
+
+    YGNodeCalculateLayout(node_, 1000, UINT16_MAX, YGDirectionLTR);
 
     std::function<void(YogaElement& element,float parent_x,float parent_y)> refresher;
 

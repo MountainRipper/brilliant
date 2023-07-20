@@ -35,6 +35,17 @@ int32_t YogaLuaLayoutContext::load(const std::string &ui_script)
         std::string cur_dir = mr::current_executable_dir();
         (*lua_)["libpath"] = (std::filesystem::path(cur_dir) / "script" / "lib"/ "?.lua" ).string();
         (*lua_)["nativeSetElementProperty"] = &YogaLuaLayout::lua_set_element_property;
+
+        lua_->new_usertype<YogaElement>( "YogaElement",
+                                "number",  sol::property(&YogaElement::get_number, &YogaElement::set_number),
+                                "boolean", sol::property(&YogaElement::get_boolean, &YogaElement::set_boolean),
+                                "string",  sol::property(&YogaElement::get_string, &YogaElement::set_string),
+                                "number_array", sol::property(&YogaElement::get_number_array, &YogaElement::set_number_array),
+                                "string_array", sol::property(&YogaElement::get_string_array, &YogaElement::set_string_array),
+                                "pointer", sol::property(&YogaElement::get_pointer, &YogaElement::set_pointer)
+                                 );
+
+
         lua_->safe_script(init_script);
     }
     try{

@@ -1,5 +1,5 @@
 #include "mr_im_widget.h"
-#include <imgui/imgui_internal.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 #include <queue>
 
 #if defined(MR_UI_WITH_TIO)
@@ -114,8 +114,8 @@ void VideoCutTimeline::show(float height)
 
 
     auto window = GetCurrentWindow();
-    auto image_l = TextureHolder::get("timeline_handle_left.png");
-    auto image_r = TextureHolder::get("timeline_handle_right.png");
+    auto image_l = mrui::TextureHolder::get("timeline_handle_left.png");
+    auto image_r = mrui::TextureHolder::get("timeline_handle_right.png");
     int32_t x = 0;
     index = 0;
     ImVec2 pos = window->Pos;
@@ -213,7 +213,7 @@ void ImageRound(const char *image, const char *sub_image, const ImVec2 &size, fl
     if(sub_image)
         image_key = image_key + ":" + sub_image;
     auto image_info = TextureHolder::get(image_key);
-    auto min = ImGui::GetCursorPos() + ImGui::GetCurrentWindow()->Pos;
+    auto min = ImGui::GetCursorPos() + ImGui::GetCurrentWindow()->Pos - ImGui::GetCurrentWindow()->Scroll;
     auto max = min + size;
     ImGui::GetWindowDrawList()->AddImageRounded(image_info.texture,min,max,image_info.top_left(),image_info.bottom_right(),ImGui::ColorConvertFloat4ToU32(tint_col),round);
 }
@@ -234,13 +234,14 @@ bool RoundImageButton(const char* str_id,const char *image, const char *sub_imag
         image_key = image_key + ":" + sub_image;
     auto image_info = TextureHolder::get(image_key);
     auto cur_pos = ImGui::GetCursorPos();
-    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos;
+    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos - ImGui::GetCurrentWindow()->Scroll;
     auto max = min + size;
     bool clicked = ImGui::InvisibleButton(str_id,size);
     ImGui::SetCursorPos(cur_pos);
     bool hoverd = ImGui::IsItemHovered();
     bool actived = ImGui::IsItemActive();
-    ImVec4 color_hover = tint_col;color_hover.w *= 0.8;
+    ImVec4 color_hover = tint_col;
+    color_hover.w *= 0.8;
     ImVec4 color = actived ? tint_col : (hoverd ? color_hover : tint_col);
     ImGui::GetWindowDrawList()->AddImageRounded(image_info.texture,min,max,image_info.top_left(),image_info.bottom_right(),ImGui::ColorConvertFloat4ToU32(color),round);
     return clicked;
@@ -249,7 +250,7 @@ bool RoundImageButton(const char* str_id,const char *image, const char *sub_imag
 void RectangleFrame(const ImVec2 &size, ImU32 color,float round,float width)
 {
     auto cur_pos = ImGui::GetCursorPos();
-    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos;
+    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos - ImGui::GetCurrentWindow()->Scroll;
     auto max = min + size;
     ImGui::GetWindowDrawList()->AddRect(min,max,color,round,0,width);
 }
@@ -257,10 +258,21 @@ void RectangleFrame(const ImVec2 &size, ImU32 color,float round,float width)
 void Rectangle(const ImVec2 &size, ImU32 color, float round)
 {
     auto cur_pos = ImGui::GetCursorPos();
-    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos;
+    auto min = cur_pos + ImGui::GetCurrentWindow()->Pos - ImGui::GetCurrentWindow()->Scroll;
     auto max = min + size;
     ImGui::GetWindowDrawList()->AddRectFilled(min,max,color,round,0);
 }
+
+void CircelFrame(const ImVec2 &center,float radius, ImU32 color, float width)
+{
+    ImGui::GetWindowDrawList()->AddCircle(center,radius,color,0,width);
+}
+
+void Circel(const ImVec2 &center, float radius, ImU32 color)
+{
+    ImGui::GetWindowDrawList()->AddCircleFilled(center,radius,color,0);
+}
+
 
 #define kDragDeltaSumSize 3
 void DragScrollCurrentWindow(bool& draged, int mouse_button, float release_speed, float decelerate_factor, bool scroll_y, bool scroll_x)
@@ -377,7 +389,7 @@ void ImRotateEnd(float rad, ImVec2 center)
         buf[i].pos = ImRotate(buf[i].pos, s, c) - center;
 }
 
-void TextAligined(const char *str, const ImVec2 &size, int aligin_h, int aligin_v)
+void TextAligined(const char *str, const ImVec2 &size, int aligin_h, int aligin_v,ImU32 color)
 {
     ImVec2 text_size = ImGui::CalcTextSize(str);
     int x = 0;
@@ -392,12 +404,11 @@ void TextAligined(const char *str, const ImVec2 &size, int aligin_h, int aligin_
     else if(aligin_v == 2)
         y = size.y - text_size.y;
 
-    auto cur_pos = ImGui::GetCursorPos();
+    auto cur_pos = ImGui::GetCursorPos() + ImGui::GetCurrentWindow()->Pos - ImGui::GetCurrentWindow()->Scroll;
     cur_pos += ImVec2(x,y);
-    ImGui::SetCursorPos(cur_pos);
-    ImGui::Text("%s", str);
-}
 
+    ImGui::GetWindowDrawList()->AddText(cur_pos,color,str);
+}
 
 
 

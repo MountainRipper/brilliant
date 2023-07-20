@@ -28,11 +28,14 @@ void ImageRound(const char* image,const char* sub_image,const ImVec2& size, floa
 bool ImageButton(const char* str_id, const char* image,const char* sub_image, const ImVec2& size, const ImVec4& bg_col = ImVec4(0, 0, 0, 0), const ImVec4& tint_col = ImVec4(1, 1, 1, 1));
 bool RoundImageButton(const char* str_id, const char *image, const char *sub_image, const ImVec2 &size, const ImVec4 &tint_col, float round);
 
-void RectangleFrame(const ImVec2& size, ImU32 color, float round = 0, float width = 0);
+void RectangleFrame(const ImVec2& size, ImU32 color, float round = 0, float width = 1);
 void Rectangle(const ImVec2& size, ImU32 color, float round = 0);
 
+void CircelFrame(const ImVec2 &center,float radius, ImU32 color, float width = 1);
+void Circel(const ImVec2 &center,float radius, ImU32 color);
+
 //aligin_h,aligin_v 0=start,1=center,2=end
-void TextAligined(const char* str,const ImVec2& size, int aligin_h, int aligin_v);
+void TextAligined(const char* str, const ImVec2& size, int aligin_h, int aligin_v, ImU32 color);
 
 struct ImguiFontResource
 {
