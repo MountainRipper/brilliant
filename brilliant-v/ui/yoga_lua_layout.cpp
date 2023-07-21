@@ -188,6 +188,7 @@ YogaElement::YogaElement(sol::table& lua_var)
     :lua_var_(lua_var)
 {
     node_ = YGNodeNew();
+    parse_self_class();
     parse_self_layout();
     parse_self_widget();
     lua_var_["nativeContext"] = this;
@@ -198,6 +199,27 @@ int32_t YogaElement::push_element(std::shared_ptr<YogaElement> element)
     YGNodeInsertChild(node_,element->node_,YGNodeGetChildCount(node_));
     children_.push_back(element);
     return children_.size();
+}
+
+int32_t YogaElement::parse_self_class()
+{
+    sol::optional<sol::table> class_opt = lua_var_["class"];
+    if(class_opt == sol::nullopt)
+        return 0;
+
+    sol::optional<sol::table> ui_opt = class_opt.value()["ui"];
+    if(ui_opt == sol::nullopt)
+        return 0;
+    sol::table ui = ui_opt.value();
+    for(const auto &item : ui){
+        std::string style_name = item.first.as<std::string>();
+        auto item_value = lua_var_[style_name];
+        if(item_value.valid() ){
+            continue;
+        }
+        lua_var_[style_name] = item.second;
+    }
+    return 0;
 }
 
 int32_t YogaElement::parse_self_layout()

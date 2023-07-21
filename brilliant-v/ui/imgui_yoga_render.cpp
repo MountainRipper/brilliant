@@ -139,7 +139,7 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
     //MR_INFO("push style use {} us",MR_TIMER_US(t));
 
     ImVec2 position = element.left_top<ImVec2>();
-    ImGui::SetCursorPos(position + ImGui::GetWindowContentRegionMin() );
+    ImGui::SetCursorPos(position + ImGui::GetWindowContentRegionMin() + ImGui::GetCurrentWindow()->Scroll) ;
 
     ImGui::PushID(&element);
 

@@ -105,6 +105,7 @@ class YogaElement : noncopyable{
 public:
     YogaElement(sol::table &lua_var);
     int32_t push_element(std::shared_ptr<YogaElement> element);
+    int32_t parse_self_class();
     int32_t parse_self_layout();
     int32_t parse_self_widget();
     int32_t get_back_position(float parent_x = 0, float parent_y = 0);

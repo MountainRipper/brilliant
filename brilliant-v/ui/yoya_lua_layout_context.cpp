@@ -9,10 +9,19 @@
 
 auto init_script = R"(
 package.path=libpath..";"..package.path;
+
+oo = require('bhou.oo.base')
+
 globalWidgets={}
+
+function classOf(Object)
+    return oo.new(Object)
+end
+
 function registerWidgets(name,widget)
     globalWidgets[name] = widget
 end
+
 function createWidget(name)
     if(globalWidgets[name] ~= nil) then
         return oo.new(globalWidgets[name])
