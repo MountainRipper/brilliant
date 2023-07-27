@@ -9,7 +9,7 @@ class YogaLuaLayoutContext
 {
 public:
     YogaLuaLayoutContext();
-    int32_t load(const std::string& ui_script);
+    int32_t load(const std::string& ui_script, int32_t screen_width, int32_t screen_height);
     YogaLuaLayout* get_layout(const std::string& id);
 private:
     std::shared_ptr<sol::state> lua_;

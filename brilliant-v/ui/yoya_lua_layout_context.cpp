@@ -36,7 +36,7 @@ YogaLuaLayoutContext::YogaLuaLayoutContext()
 
 }
 
-int32_t YogaLuaLayoutContext::load(const std::string &ui_script)
+int32_t YogaLuaLayoutContext::load(const std::string &ui_script, int32_t screen_width, int32_t screen_height)
 {
     if(!lua_){
         lua_ = std::shared_ptr<sol::state>(new sol::state());
@@ -44,7 +44,8 @@ int32_t YogaLuaLayoutContext::load(const std::string &ui_script)
         std::string cur_dir = mr::current_executable_dir();
         (*lua_)["libpath"] = (std::filesystem::path(cur_dir) / "script" / "lib"/ "?.lua" ).string();
         (*lua_)["nativeSetElementProperty"] = &YogaLuaLayout::lua_set_element_property;
-
+        (*lua_)["screenWidth"] = screen_width;
+        (*lua_)["screenHeight"] = screen_height;
         lua_->new_usertype<YogaElement>( "YogaElement",
                                 "number",  sol::property(&YogaElement::get_number, &YogaElement::set_number),
                                 "boolean", sol::property(&YogaElement::get_boolean, &YogaElement::set_boolean),
