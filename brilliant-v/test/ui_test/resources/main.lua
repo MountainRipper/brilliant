@@ -501,7 +501,7 @@ function MainUI:init()
                         elements={
                             {
                                 widget="RectangleFrame",
-                                width = "20%",
+                                width = "15%",
                                 height = "80%",
                                 style={
                                     color=0xFF8800FF,frameWidth=4
@@ -509,7 +509,7 @@ function MainUI:init()
                             },
                             {
                                 widget="RectangleFrame",
-                                width = "20%",
+                                width = "15%",
                                 height = "80%",
                                 marginLeft=16,
                                 style={
@@ -518,7 +518,7 @@ function MainUI:init()
                             },
                             {
                                 widget="Rectangle",
-                                width = "20%",
+                                width = "15%",
                                 height = "80%",
                                 marginLeft=16,
                                 style={
@@ -527,7 +527,7 @@ function MainUI:init()
                             },
                             {
                                 widget="Rectangle",
-                                width = "20%",
+                                width = "15%",
                                 height = "80%",
                                 marginLeft=16,
                                 style={
