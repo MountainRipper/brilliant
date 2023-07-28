@@ -157,7 +157,7 @@ TextureHolder::Image TextureHolder::get(const std::string &name)
 int32_t TextureHolder::add_image(const std::string & name, Image image)
 {
     images_[name] = image;
-    auto pos = name.find_first_of(':') + 1;
+    auto pos = name.find_last_of(':') + 1;
     if( pos != std::string::npos && pos != name.size()){
         std::string sub_name(name.begin()+pos,name.end());
         images_[sub_name] = image;

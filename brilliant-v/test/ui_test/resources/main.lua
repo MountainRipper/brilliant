@@ -149,8 +149,16 @@ function Layout:getElementStyle(id,style)
     return nil
 end
 
+sizeImage   = screenWidth/1920*64
+sizeButton  = screenWidth/1920*25
+sizeText    = sizeButton --with bottom margin 17 actual
+sizeInput   = screenWidth/1920*128
+
+sizeMarginTop = screenWidth/1920*4
+
 oo.class("ImageButtonRow",Layout)
 function ImageButtonRow:init()
+
     self.ui={
         height="auto",
         width="100%",
@@ -158,16 +166,16 @@ function ImageButtonRow:init()
         flexWrap="wrap",
         elements={
             {
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 widget="ImageButton",
                 style={
                     image="dialog-apply.png",colorButton=0xFF8800FF,colorButtonHovered=0xFFAA00FF,colorButtonActive=0xFF8800FF
                 }
             },
             {
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 marginLeft=20,
                 widget="ImageButton",
                 style={
@@ -175,8 +183,8 @@ function ImageButtonRow:init()
                 }
             },
             {
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 marginLeft=20,
                 widget="ImageButton",
                 style={
@@ -184,8 +192,8 @@ function ImageButtonRow:init()
                 }
             },
             {
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 marginLeft=20,
                 widget="RoundImageButton",
                 style={
@@ -193,8 +201,8 @@ function ImageButtonRow:init()
                 }
             },
             {
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 marginLeft=10,
                 widget="RoundImageButton",
                 style={
@@ -216,8 +224,8 @@ function ImageButtonRow:init()
                 },
             },
             {
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 marginLeft=10,
                 widget="RoundImageButton",
                 style={
@@ -225,8 +233,8 @@ function ImageButtonRow:init()
                 }
             },
             {
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 marginLeft=10,
                 widget="RoundImageButton",
                 style={
@@ -234,8 +242,8 @@ function ImageButtonRow:init()
                 }
             },
             {
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 marginLeft=10,
                 widget="RoundImageButton",
                 style={
@@ -244,8 +252,8 @@ function ImageButtonRow:init()
             },
             {
                 id="btnEffect",
-                width=128,
-                height=128,
+                width=sizeImage,
+                height=sizeImage,
                 marginLeft=10,
                 widget="RoundImageButton",
                 style={
@@ -275,29 +283,30 @@ function MainUI:init()
                 height="100%",
                 flexDirection="column",
                 style={dragScrollX=true,dragScrollY=true},
+                marginLeft=4,
                 elements={
                     {
                         width=10,
-                        height=40,
-                        widget="Text",
+                        height=sizeText,
+                        widget="Text",                        
                         style={text="Images"}
                     },
                     {
-                        height=128,
+                        height=sizeImage,
                         width="100%",
                         flexDirection="row",
                         elements={
                             {
-                                width=128,
-                                height=128,
+                                width=sizeImage,
+                                height=sizeImage,
                                 widget="Image",
                                 style={
                                     image="wechat.png",color=0xFFFFFFFF
                                 }
                             },
                             {
-                                width=128,
-                                height=128,
+                                width=sizeImage,
+                                height=sizeImage,
                                 widget="Image",
                                 marginLeft=8,
                                 style={
@@ -305,8 +314,8 @@ function MainUI:init()
                                 }
                             },
                             {
-                                width=128,
-                                height=128,
+                                width=sizeImage,
+                                height=sizeImage,
                                 widget="Image",
                                 marginLeft=8,
                                 style={
@@ -314,8 +323,8 @@ function MainUI:init()
                                 }
                             },
                             {
-                                width=128,
-                                height=128,
+                                width=sizeImage,
+                                height=sizeImage,
                                 widget="Image",
                                 marginLeft=8,
                                 style={
@@ -337,8 +346,8 @@ function MainUI:init()
                                 },
                             },
                             {
-                                width=128,
-                                height=128,
+                                width=sizeImage,
+                                height=sizeImage,
                                 widget="Image",
                                 marginLeft=8,
                                 style={
@@ -360,8 +369,8 @@ function MainUI:init()
                                 },
                             },
                             {
-                                width=128,
-                                height=128,
+                                width=sizeImage,
+                                height=sizeImage,
                                 widget="Image",
                                 marginLeft=8,
                                 style={
@@ -383,8 +392,8 @@ function MainUI:init()
                                 },
                             },
                             {
-                                width=128,
-                                height=128,
+                                width=sizeImage,
+                                height=sizeImage,
                                 widget="Image",
                                 marginLeft=8,
                                 style={
@@ -409,20 +418,20 @@ function MainUI:init()
                     },
                     {
                         width=10,
-                        height=40,
+                        height=sizeText,
                         widget="Text",
-                        marginTop=10,
+                        marginTop=sizeMarginTop,
                         style={text="Buttons"}
                     },
                     {
-                        height=50,
+                        height=sizeButton,
                         width="100%",
                         flexDirection="row",
                         elements={
                             {
                                 id="btn1",
-                                width=100,
-                                height=50,
+                                width=sizeButton*4,
+                                height=sizeButton,
                                 widget="Button",
                                 style={
                                     text="Play",colorButton=0xFF000099,colorButtonHovered=0xFF0000AA,colorButtonActive=0xFF000055
@@ -434,8 +443,8 @@ function MainUI:init()
                             },
                             {
                                 id="btn2",
-                                width=300,
-                                height=50,
+                                width=sizeButton*6,
+                                height=sizeButton,
                                 marginLeft=10,
                                 marginRight=10,
                                 widget="Button",
@@ -450,8 +459,8 @@ function MainUI:init()
                             },
                             {
                                 id="btn3",
-                                width=100,
-                                height=50,
+                                width=sizeButton*2,
+                                height=sizeButton,
                                 widget="Button",
                                 style={
                                     text="Stop",colorButton=0x0055FFFF,colorButtonHovered=0x0055FFAA,colorButtonActive={0,128,255,200},frameRounding=16
@@ -462,8 +471,8 @@ function MainUI:init()
                             },
                             {
                                 id="btn4",
-                                width=200,
-                                height=50,
+                                width=sizeButton*4,
+                                height=sizeButton,
                                 marginLeft=10,
                                 marginRight=10,
                                 widget="Button",
@@ -475,9 +484,9 @@ function MainUI:init()
                     },
                     {
                         width=10,
-                        height=40,
+                        height=sizeText,
                         widget="Text",
-                        marginTop=10,
+                        marginTop=sizeMarginTop,
                         style={text="ImageButtons",color=0xFF8800FF},
                     },                    
                     {
@@ -486,19 +495,19 @@ function MainUI:init()
                     },
                     {
                         width=10,
-                        height=40,
+                        height=sizeText,
                         widget="Text",
-                        marginTop=10,
+                        marginTop=sizeMarginTop,
                         style={text="Rectangles",color=0xFF8800FF},
                     },
                     {
-                        height=128,
+                        height=sizeImage,
                         width="100%",
                         flexDirection="row",
                         elements={
                             {
                                 widget="RectangleFrame",
-                                width = "20%",
+                                width = "15%",
                                 height = "80%",
                                 style={
                                     color=0xFF8800FF,frameWidth=4
@@ -506,7 +515,7 @@ function MainUI:init()
                             },
                             {
                                 widget="RectangleFrame",
-                                width = "20%",
+                                width = "15%",
                                 height = "80%",
                                 marginLeft=16,
                                 style={
@@ -515,7 +524,7 @@ function MainUI:init()
                             },
                             {
                                 widget="Rectangle",
-                                width = "20%",
+                                width = "15%",
                                 height = "80%",
                                 marginLeft=16,
                                 style={
@@ -524,7 +533,7 @@ function MainUI:init()
                             },
                             {
                                 widget="Rectangle",
-                                width = "20%",
+                                width = "15%",
                                 height = "80%",
                                 marginLeft=16,
                                 style={
@@ -535,30 +544,30 @@ function MainUI:init()
                     },
                     {
                         width=10,
-                        height=40,
+                        height=sizeText,
                         widget="Text",
                         style={text="Circel",color=0xFF8800FF},
                     },
                     {
-                        height=128,
+                        height=sizeImage,
                         width="100%",
                         flexDirection="row",
                         elements={
                             {
                                 widget="CircelFrame",
-                                width = 128,
-                                height = 128,
+                                width = sizeImage,
+                                height = sizeImage,
                                 style={
-                                    color=0xFF8800FF,frameRounding=64,frameWidth=4
+                                    color=0xFF8800FF,frameRounding=sizeImage/2,frameWidth=4
                                 },
                             },
                             {
                                 widget="Circel",
-                                width = 128,
-                                height = 128,
+                                width = sizeImage,
+                                height = sizeImage,
                                 marginLeft=16,
                                 style={
-                                    color=0xFF8800FF,frameRounding=64
+                                    color=0xFF8800FF,frameRounding=sizeImage/2
                                 },
                             }
                         }
@@ -566,14 +575,14 @@ function MainUI:init()
 
                     {
                         width=10,
-                        height=40,
+                        height=sizeText,
                         widget="Text",
-                        marginTop=10,
+                        marginTop=sizeMarginTop,
                         style={text="TextAligin",color=0xFF8800FF},
                     },
                     {
-                        width="50%",
-                        height=120,
+                        width=sizeInput*2,
+                        height=sizeInput,
                         widget="Rectangle",
                         style={
                             color=0xFF8800FF
@@ -680,16 +689,16 @@ function MainUI:init()
                         }
                     },
                     {
-                        width=10,
-                        height=40,
+                        width=sizeInput,
+                        height=sizeText,
                         widget="Text",
-                        marginTop=10,
+                        marginTop=sizeMarginTop,
                         style={text="Input Text",color=0xFF8800FF},
                     },
                     {
-                        height=50,
-                        width=256,
-                        marginTop=10,
+                        width=sizeInput,
+                        height=sizeText,
+                        marginTop=sizeMarginTop,
                         widget="InputText",
                         --style={lable="InputText"},
                         valueChanged=function(this)
@@ -697,9 +706,9 @@ function MainUI:init()
                         end
                     },
                     {
-                        height=256,
-                        width=256,
-                        marginTop=10,
+                        width=sizeInput*2,
+                        height=sizeInput*2,
+                        marginTop=sizeMarginTop,
                         widget="InputTextMultiline",
                         --style={lable="InputTextMultiline"},
                         valueChanged=function(this)
@@ -708,15 +717,15 @@ function MainUI:init()
                     },
                     {
                         width=10,
-                        height=40,
+                        height=sizeText,
                         widget="Text",
-                        marginTop=10,
+                        marginTop=sizeMarginTop,
                         style={text="Slider",color=0xFF8800FF},
                     },
                     {
-                        height=50,
-                        width=256,
-                        marginTop=10,
+                        height=sizeText,
+                        width=sizeInput,
+                        marginTop=sizeMarginTop,
                         widget="Slider",
                         style={valueMin=1.0,valueMax=10.0},
                         valueChanged=function(this)

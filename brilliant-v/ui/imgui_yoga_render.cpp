@@ -353,7 +353,7 @@ int32_t ImGuiYogaRender::load_theme(const std::string &theme_name)
 {
     sol::state lua;
     lua.open_libraries();
-    std::string theme_file = std::filesystem::path(mr::current_executable_dir()) / "resources" / "theme_default.lua";
+    std::string theme_file = (std::filesystem::path(mr::current_executable_dir()) / "resources" / "theme_default.lua").string();
     try{
         lua.safe_script_file(theme_file);
         sol::optional<sol::table> theme_opt = lua[theme_name];

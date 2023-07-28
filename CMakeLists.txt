@@ -22,7 +22,7 @@ if(NOT DEFINED  MR_TARGET_ARCH)
 endif()
 
 set(MR_COMPILER_VER "gcc")
-set(MR_BUILD_TYPE "release          ")
+set(MR_BUILD_TYPE "release")
 string(TOLOWER "${CMAKE_BUILD_TYPE}" MR_BUILD_TYPE)
 
 if(${MR_TARGET_OS} MATCHES "linux")

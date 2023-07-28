@@ -81,6 +81,8 @@ int32_t MrUIExample::on_pre_init(cxxopts::ParseResult &options_result, uint32_t 
 
 int32_t MrUIExample::on_init(void *window,int width, int height)
 {
+    SDL_DisplayMode mode;
+    SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex((SDL_Window*)window),&mode);
     //SDL_GL_SetSwapInterval(0);
     width_ = width;
     height_ = height;
@@ -107,7 +109,9 @@ int32_t MrUIExample::on_init(void *window,int width, int height)
     static const ImWchar ranges[] = { 0x0001, 0xFFFF, 0 };
     fonts->AddFontFromMemoryCompressedBase85TTF(notosans_compressed_data_base85,24,&icons_config,ranges);
 
-    yoga_layout_context_.load("/home/xuwei/work/projects/MountainRipper/brilliant/brilliant-v/test/ui_test/resources/main.lua");
+
+    std::filesystem::path current_file(__FILE__);
+    yoga_layout_context_.load((current_file.parent_path()/"resources"/"main.lua").string(),mode.w,mode.h);
     yoga_layout_context_.set_context_variant("testModel",(void*)&test_model_);
 
     yoga_main_ui_ = yoga_layout_context_.get_layout("org.mr.brilliant.MainUI");
