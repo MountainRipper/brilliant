@@ -87,10 +87,76 @@ YogaLuaLayout *YogaLuaLayoutContext::get_layout(const std::string &id)
             }
         }
     }
+    if(layout == nullptr)
+        return nullptr;
 
     layout->refresh_position_all();
     layout->refresh_named_elements();
 
     MR_INFO("parse and calc use {} ms",MR_TIMER_MS(t));
     return layout;
+}
+
+int32_t YogaLuaLayoutContext::set_context_variant(const std::string_view &name,const CompatValue &value)
+{
+    auto type_index = value.index();
+    switch (type_index) {
+    case kCompatValueNumberIndex: {
+        (*lua_)[name] = (double)value;
+        break;
+    }
+    case kCompatValueBooleanIndex: {
+        (*lua_)[name] = (bool)value;
+        break;
+    }
+    case kCompatValueStringIndex: {
+        (*lua_)[name] = (std::string)value;
+        break;
+    }
+    case kCompatValueNumberArrayIndex: {
+        (*lua_)[name] = (std::vector<double>)value;
+        break;
+    }
+    case kCompatValueStringArrayIndex: {
+        (*lua_)[name] = (std::vector<std::string>)value;
+        break;
+    }
+    case kCompatValuePointerIndex: {
+        (*lua_)[name] = (void*)value;
+        break;
+    }
+    }
+    return 0;
+}
+
+int32_t YogaLuaLayoutContext::set_context_variant_ref(const std::string_view &name, CompatValue &value)
+{
+    auto type_index = value.index();
+    switch (type_index) {
+    case kCompatValueNumberIndex: {
+        (*lua_)[name] = value.ref_number();
+        break;
+    }
+    case kCompatValueBooleanIndex: {
+        (*lua_)[name] = value.ref_boolean();
+        break;
+    }
+    case kCompatValueStringIndex: {
+        (*lua_)[name] = value.ref_string();
+        break;
+    }
+    case kCompatValueNumberArrayIndex: {
+        (*lua_)[name] = value.ref_number_array();
+        break;
+    }
+    case kCompatValueStringArrayIndex: {
+        (*lua_)[name] = value.ref_string_array();
+        break;
+    }
+    case kCompatValuePointerIndex: {
+        (*lua_)[name] = value.ref_pointer();
+        break;
+    }
+    }
+    return 0;
 }

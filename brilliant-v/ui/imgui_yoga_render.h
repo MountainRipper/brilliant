@@ -14,9 +14,9 @@ public:
         void(*var_setter_float)(ImGuiStyleVar idx, float val);
         void(*var_setter_vec2)(ImGuiStyleVar idx, const ImVec2& val);
     };
-
-    int32_t element_push_style_var(YogaElement &element, int32_t &pushed_style_color, int32_t &pushed_style_var,StyleSetter* setter = nullptr);
+    int32_t attach_environment(sol::state& lua_state);
     int32_t load_theme(const std::string& theme_name = "defaultTheme");
+    int32_t element_push_style_var(YogaElement &element, int32_t &pushed_style_color, int32_t &pushed_style_var,StyleSetter* setter = nullptr);
     // YogaLuaLayoutRenderer interface
 public:
     virtual int32_t on_render_elements(YogaElement &element) override;

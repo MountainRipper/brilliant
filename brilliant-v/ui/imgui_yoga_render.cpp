@@ -9,6 +9,8 @@
 #include <sol/sol.hpp>
 #include "imgui_yoga_render.h"
 
+const ImGuiID kStateIdDragScrolling = 100001;
+
 struct ImGuiStyleVarInfo{
     uint8_t value_count;
     ImGuiStyleVar_ type;
@@ -106,6 +108,11 @@ ImGuiYogaRender::ImGuiYogaRender()
 
 }
 
+int32_t ImGuiYogaRender::attach_environment(sol::state &lua_state)
+{
+    //lua_state.new_usertype<mrui::ListView::AbstractModel>( "ListModel");
+}
+
 int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
 {
 //    MR_INFO("render wiget:{} id:{} pos:{}#{}#{}#{} size:{}x{}",element.widget_,element.id_,
@@ -159,7 +166,8 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
             clicked = mrui::RoundImageButton(element.id_.c_str(),element.style_value("image","").c_str(),NULL,size,ImGui::ColorConvertU32ToFloat4(tint_color),radius);
         }
 
-        if(clicked){
+        bool drag_scrolling = ImGui::GetCurrentWindow()->StateStorage.GetBool(kStateIdDragScrolling);
+        if(clicked && !drag_scrolling){
             element.emit_event("onclicked");
         }
     }
@@ -202,7 +210,7 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
         if(kCompatValueStringIndex != element.value_.index()){
             element.value_ = std::string();
         }
-        std::string &value = std::get<std::string>(element.value_);
+        std::string &value = element.value_.ref_string();
         std::string lable = element.style_value("lable","");
         if(element.widget_ == "InputText"){
             ImGui::SetNextItemWidth(element.width_);
@@ -214,13 +222,13 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
         if(value_changed)MR_INFO(">>>:{}",value);
     }
     else if(element.widget_ == "Slider"){
-        float value_temp = std::get<double>(element.value_);
+        float value_temp = (double)element.value_;
         float value_min = element.style_value("valueMin",double(0));
         float value_max = element.style_value("valueMax",double(1));
         std::string format = element.style_value("valueFormat","%.2f");
         ImGui::SetNextItemWidth(element.width_);
         value_changed = ImGui::SliderFloat(element.id_.c_str(),&value_temp,value_min,value_max,format.c_str());
-        element.value_ = double(value_temp);
+        element.value_ = value_temp;
     }
     else if(element.widget_ == "RectangleFrame" || element.widget_ == "Rectangle"){
         bool exist = false;
@@ -247,6 +255,13 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
             mrui::Circel(center,radius,color);
         }
     }
+    else if(element.widget_ == "ListView"){
+        if(element.value_.index() != kCompatValuePointerIndex){
+
+        }
+
+    }
+
 
     if(pushed_style_color)
         ImGui::PopStyleColor(pushed_style_color);
@@ -267,8 +282,12 @@ int32_t ImGuiYogaRender::after_render_elements(YogaElement &element)
         ImGui::End();
     }
     else if(element.widget_ == "ChildWindow"){
-        bool draged = false;
-        mrui::DragScrollCurrentWindow(draged,ImGuiMouseButton_Left,1,0.9,true,true);
+        bool drag_scrolling = false;
+        bool drag_scroll_x = element.style_value("dragScrollX",false);
+        bool drag_scroll_y = element.style_value("dragScrollY",false);
+        if(drag_scroll_x || drag_scroll_y)
+            mrui::DragScrollCurrentWindow(drag_scrolling,ImGuiMouseButton_Left,1,0.9,drag_scroll_y,drag_scroll_x);
+        ImGui::GetCurrentWindow()->StateStorage.SetBool(kStateIdDragScrolling,drag_scrolling);
         ImGui::EndChild();
     }
     return 0;
@@ -279,7 +298,7 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element, int32_t& p
     pushed_style_var = 0;
 
     for(auto& style : element.styles_){
-        const LuaCompatValue& style_value = style.second;
+        const CompatValue& style_value = style.second;
 
         auto color_it = map_style_color_name.find(style.first);
         if(color_it != map_style_color_name.end() ){
@@ -298,18 +317,18 @@ int32_t ImGuiYogaRender::element_push_style_var(YogaElement &element, int32_t& p
             if(info.value_count == 1 && style_value.index() == kCompatValueNumberIndex){
                 if(setter && setter->var_setter_float){
                     pushed_style_var++;
-                    float value = std::get<double>(style_value);
+                    double value = style_value;
                     setter->var_setter_float(info.type,value);
                 }
             }
             else if(info.value_count == 2){
                 ImVec2 value(0,0);
                 if(style_value.index() == kCompatValueNumberIndex){
-                    auto v = std::get<double>(style_value);
+                    double v = style_value;
                     value.x = value.y = v;
                 }
                 else if(style_value.index() == kCompatValueNumberArrayIndex){
-                    auto v = std::get<std::vector<double>>(style_value);
+                    std::vector<double> v = style_value;
                     if(v.empty())
                         continue;
 

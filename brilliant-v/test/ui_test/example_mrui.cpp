@@ -1,3 +1,4 @@
+#include "basic_types.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <filesystem>
 #include <glad/gl.h>
@@ -14,13 +15,53 @@
 #include <ttf/ttf_notosans.h>
 
 /*
- *Yoya :
+ *Yoga :
  *Justify Content: hor layout for child
  */
 MR_MR_SDL_RUNNER_SHOWCASE(MrUIExample)
 
 using namespace mr::tio;
 
+
+class TestModelData{
+public:
+    GETTER_SETTER(double,id)
+    GETTER_SETTER(std::string,name)
+};
+
+#define MODEL_EXPORT_PROPERTY(name) \
+keys_.push_back(#name)
+
+template<typename DataType>
+class TestModel: public mrui::ListView::AbstractModel{
+    // AbstractModel interface
+public:
+    virtual int count_imp() override{
+        return data_vector_.size();
+    }
+    virtual std::vector<std::string> keys_imp() override{
+        return std::vector<std::string>();
+    }
+    virtual CompatValue value_imp(size_t index, const std::string_view &key) override{
+        DataType& data = data_vector_[index];
+        GETTER_RETURN(data,id,key)
+        GETTER_RETURN(data,name,key)
+        return CompatValue();
+    }
+    virtual void erase_imp(size_t index) override{
+        if(index >= data_vector_.size())
+            return;
+        data_vector_.erase(data_vector_.begin()+index);
+    }
+    void append(DataType& data){
+        data_vector_.push_back(data);
+    }
+
+    typedef std::map<std::string,CompatValue> CompatProperties;
+    std::vector<DataType> data_vector_;
+    std::vector<std::string> keys_;
+};
+TestModel<TestModelData> test_model_;
 
 MrUIExample::MrUIExample()
 {
@@ -54,8 +95,8 @@ int32_t MrUIExample::on_init(void *window,int width, int height)
 
     for (int index = 0; index < 100; ++index) {
 
-        GridData data{index,names[index%names.size()]};
-        grid_data_.push_back(data);
+        TestModelData data{(double)index,names[index%names.size()]};
+        test_model_.append(data);
     }
 
     auto fonts = ImGui::GetIO().Fonts;
@@ -67,6 +108,8 @@ int32_t MrUIExample::on_init(void *window,int width, int height)
     fonts->AddFontFromMemoryCompressedBase85TTF(notosans_compressed_data_base85,24,&icons_config,ranges);
 
     yoga_layout_context_.load("/home/xuwei/work/projects/MountainRipper/brilliant/brilliant-v/test/ui_test/resources/main.lua");
+    yoga_layout_context_.set_context_variant("testModel",(void*)&test_model_);
+
     yoga_main_ui_ = yoga_layout_context_.get_layout("org.mr.brilliant.MainUI");
     yoga_main_ui_->set_renderer(&yoga_render_);
     yoga_record_ui_ = yoga_layout_context_.get_layout("org.mr.brilliant.RecordUI");
@@ -189,17 +232,19 @@ void MrUIExample::render_ui()
 
     ImGui::SameLine();
 
-    if(noto_font_)
+    /*if(noto_font_)
         ImGui::PushFont(noto_font_);
 
     int clicked_index = -1;
 
-    grid_.draw(grid_data_,
-        [this,&clicked_index](mrui::ListView<GridData>& view,GridData& data,int index,int width,int height){
+    grid_.draw(&test_model_,
+        [this,&clicked_index](mrui::ListView& view,mrui::ListView::AbstractModel* model,int index,int x,int y,int width,int height){
+            std::string name = CompatValue(model->value(index,"name"));
+            int32_t data_index = CompatValue(model->value(index,"id"));
 
             float start_y = ImGui::GetCursorPosY();
             ImGui::Spacing();
-            ImGui::Text("%d",index);ImGui::SameLine();
+            ImGui::Text("%d",data_index);ImGui::SameLine();
             ImGui::SetCursorPosX(40);
             mrui::Image(test_bundle_image_.c_str(),"blueman-trust.png",ImVec2(height,height));ImGui::SameLine();
             auto pos_logo = ImGui::GetCursorPos();
@@ -207,9 +252,10 @@ void MrUIExample::render_ui()
             ImGui::PushID(index);
 
             ImGui::SameLine();
-            ImGui::SetCursorPosX(width - ImGui::CalcTextSize(data.name_.c_str()).x - 40);
 
-            if(ImGui::ButtonEx(data.name_.c_str()) && !view.draded_){
+            ImGui::SetCursorPosX(width - ImGui::CalcTextSize(name.c_str()).x - 40);
+
+            if(ImGui::ButtonEx(name.c_str()) && !view.draded_){
                 clicked_index = index;
             }
 
@@ -220,7 +266,7 @@ void MrUIExample::render_ui()
 
             ImGui::SetCursorPos(pos_logo);
             if(ImGui::InvisibleButton("coverButton",ImVec2(rect.Min.x - pos_logo.x,height)) && !view.draded_){
-                view.current_index_ = data.index;
+                view.current_index_ = data_index;
             }
 
             ImGui::PopID();
@@ -231,7 +277,7 @@ void MrUIExample::render_ui()
             float end_y = ImGui::GetCursorPosY();
             ImGui::SetCursorPosX(0);
             ImGui::SetCursorPosY(start_y);
-            if(view.current_index_ == data.index){
+            if(view.current_index_ == data_index){
                 mrui::Image("select-border.png",NULL,ImVec2(width,end_y-start_y));ImGui::SameLine();
             }
             ImGui::SetCursorPosY(end_y);
@@ -242,15 +288,18 @@ void MrUIExample::render_ui()
         ImGui::PopFont();
     }
     if(clicked_index >= 0){
-        grid_data_.erase(grid_data_.begin()+clicked_index);
+        test_model_.erase(clicked_index);
         if(grid_.current_index_ == clicked_index)
             grid_.current_index_ = -1;
-    }
+    }*/
 
     //ImRotateDemo();
+
 
     ImGui::End();
 
     yoga_main_ui_->render_frame();
     yoga_record_ui_->render_frame();
 }
+
+

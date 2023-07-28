@@ -10,7 +10,6 @@
 #include <imgui_yoga_render.h>
 using namespace mr;
 
-
 class MrUIExample : public SDLShowcaseBase
 {
 public:
@@ -37,18 +36,9 @@ private:
     int width_ = 0;
     int height_ = 0;
     bool resized_ = true;
-
-
-    struct GridData
-    {
-        int index = 0;
-        std::string name_;
-    };
-
     ImFont* noto_font_ = nullptr;
 
-    mrui::ListView<GridData> grid_;
-    std::vector<GridData> grid_data_;
+    mrui::ListView grid_;
     std::string test_bundle_image_;
     bool button_window_draged_ = false;
 

@@ -64,8 +64,8 @@ inline YGValue LUA_YG_VALUE(sol::table &table, std::string_view name){
     return value;
 }
 
-LuaCompatValue lua_get_style_value(sol::lua_value& value){
-    LuaCompatValue property_value;
+CompatValueType lua_get_style_value(sol::lua_value& value){
+    CompatValueType property_value;
     switch (value.value().get_type()) {
     case sol::type::number:property_value = value.as<double>();break;
     case sol::type::string:property_value = value.as<std::string>();break;
@@ -277,16 +277,16 @@ uint32_t YogaElement::style_color(const std::string &style, uint32_t defalt_valu
     return defalt_value;
 }
 
-uint32_t YogaElement::style_value_color(const LuaCompatValue &value,uint32_t defalt_value)
+uint32_t YogaElement::style_value_color(const CompatValue &value,uint32_t defalt_value)
 {
     if(value.index() == kCompatValueNumberIndex){
-        uint32_t color = std::get<double>(value);
+        uint32_t color = value;
         UINT32_SWAP_ENDIAN(color)
         return color;
     }
     else if(value.index() == kCompatValueNumberArrayIndex){
         uint32_t color = 0xFF000000;
-        auto v = std::get<std::vector<double>>(value);
+        std::vector<double> v = value;
         if(v.empty())
             return color;
 
@@ -500,7 +500,7 @@ int32_t YogaLuaLayout::refresh_position_all()
 
     }
 
-    YGNodeCalculateLayout(node_, 1000, UINT16_MAX, YGDirectionLTR);
+    YGNodeCalculateLayout(node_, YGUndefined, YGUndefined, YGDirectionLTR);
 
     std::function<void(YogaElement& element,float parent_x,float parent_y)> refresher;
 

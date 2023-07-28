@@ -13,6 +13,8 @@
 #include <tio/tio_types.h>
 #endif
 
+#include "basic_types.h"
+
 namespace mrui
 {
 
@@ -36,6 +38,34 @@ void Circel(const ImVec2 &center,float radius, ImU32 color);
 
 //aligin_h,aligin_v 0=start,1=center,2=end
 void TextAligined(const char* str, const ImVec2& size, int aligin_h, int aligin_v, ImU32 color);
+
+class TextureHolder{
+public:
+    struct Image{
+
+        ImVec2 top_left() const{
+            return ImVec2(float(pos.x)/size_totle.x,float(pos.y)/size_totle.y);
+        }
+        ImVec2 bottom_right() const{
+            return ImVec2(float(pos.x+size.x)/size_totle.x,float(pos.y+size.y)/size_totle.y);
+        }
+
+        ImVec2 pos;
+        ImVec2 size;
+        ImVec2 size_totle;
+        ImTextureID texture = 0;
+    };
+    static Image get(const std::string& name);
+    static int32_t add_image(const std::string&name, Image image);
+    static const std::map<std::string,Image>& all_images();
+#if defined(MR_UI_WITH_TIO)
+    static int32_t add_image(const std::string& image_file);
+    static std::map<std::string,mr::tio::GraphicTexture> textures_;
+#endif
+private:
+    static std::map<std::string,Image> images_;
+};
+
 
 struct ImguiFontResource
 {
@@ -133,70 +163,54 @@ private:
     int origin_size_ = 0;
 };
 
-class CenteredControlWrapper {
-public:
-    explicit CenteredControlWrapper(bool result) : result_(result) {}
 
-    operator bool() const {
-        return result_;
-    }
-
-private:
-    bool result_;
-};
-
-class ControlCenterer {
-public:
-    ControlCenterer(ImVec2 windowSize) : windowSize_(windowSize) {}
-
-    template<typename Func>
-    CenteredControlWrapper operator()(Func control) const {
-        ImVec2 originalPos = ImGui::GetCursorPos();
-
-        // Draw offscreen to calculate size
-        ImGui::SetCursorPos(ImVec2(-10000.0f, -10000.0f));
-        control();
-        ImVec2 controlSize = ImGui::GetItemRectSize();
-
-        // Draw at centered position
-        ImGui::SetCursorPos(ImVec2((windowSize_.x - controlSize.x) * 0.5f, originalPos.y));
-        control();
-
-        return CenteredControlWrapper(ImGui::IsItemClicked());
-    }
-
-private:
-    ImVec2 windowSize_;
-};
-
-class Panel{
-public:
-    Panel(int width,int height){
-        rect_.Min = ImGui::GetCursorPos();
-        rect_.Max = rect_.Min + ImVec2(width,height);
-    }
-
-    ImRect rect_;
-};
-
-template<typename Data>
 class ListView{
 public:
-    typedef std::function<int32_t(ListView<Data>& view,Data& data,int index,int width,int height)> draw_callback;
+    struct AbstractModel{
+        size_t count(){
+            return count_imp();
+        }
+
+        std::vector<std::string> keys(){
+            return keys_imp();
+        }
+
+        CompatValue value(size_t index,const std::string_view& key){
+            return value_imp(index,key);
+        }
+
+        void erase(size_t index){
+            erase_imp(index);
+        }
+        virtual int count_imp(){
+            return 0;
+        }
+        virtual std::vector<std::string> keys_imp(){
+            return std::vector<std::string>();
+        }
+        virtual CompatValue value_imp(size_t index,const std::string_view& key){
+            static CompatValue value = 0.0f;
+            return value;
+        }
+        virtual void erase_imp(size_t index){
+
+        }
+    };
+    //drawer callback function , return actual height the item used
+    typedef std::function<int32_t(ListView& view,AbstractModel* model,int index,int x,int y,int width,int height)> draw_callback;
     ListView(){
         char temp[64];
         sprintf(temp,"mrui_listview_%p",this);
         id_ =  temp;
     }
 
-    int32_t draw(std::vector<Data> &datas, draw_callback drawer,int32_t width,int32_t height,int32_t item_height,int32_t space = 0)
+    int32_t draw(AbstractModel* model, draw_callback drawer,int32_t width,int32_t height,int32_t item_height,int32_t space = 0)
     {
-
         ImGui::BeginChild(id_.c_str(),ImVec2(width,height),true);
-        int index = 0;
-        for(auto& item : datas){
-            drawer(*this,item,index,width,item_height);
-            index++;
+        size_t count = model->count();
+        int x = 0, y = 0;
+        for(size_t index = 0; index < count; index++){
+            y += drawer(*this,model,index,x,y,width,item_height);
         }
         DragScrollCurrentWindow(draded_);
         ImGui::EndChild();
@@ -212,36 +226,8 @@ public:
     bool draded_ = false;
 private:
     std::string id_;
-    std::vector<Data&>* data_;
     int32_t width_;
     int32_t height_;
-};
-
-class TextureHolder{
-public:
-    struct Image{
-
-        ImVec2 top_left() const{
-            return ImVec2(float(pos.x)/size_totle.x,float(pos.y)/size_totle.y);
-        }
-        ImVec2 bottom_right() const{
-            return ImVec2(float(pos.x+size.x)/size_totle.x,float(pos.y+size.y)/size_totle.y);
-        }
-
-        ImVec2 pos;
-        ImVec2 size;
-        ImVec2 size_totle;
-        ImTextureID texture = 0;
-    };
-    static Image get(const std::string& name);
-    static int32_t add_image(const std::string&name, Image image);
-    static const std::map<std::string,Image>& all_images();
-#if defined(MR_UI_WITH_TIO)
-    static int32_t add_image(const std::string& image_file);
-    static std::map<std::string,mr::tio::GraphicTexture> textures_;
-#endif
-private:
-    static std::map<std::string,Image> images_;
 };
 
 

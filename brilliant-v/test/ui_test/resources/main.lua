@@ -243,6 +243,7 @@ function ImageButtonRow:init()
                 }
             },
             {
+                id="btnEffect",
                 width=128,
                 height=128,
                 marginLeft=10,
@@ -273,6 +274,7 @@ function MainUI:init()
                 width="100%",
                 height="100%",
                 flexDirection="column",
+                style={dragScrollX=true,dragScrollY=true},
                 elements={
                     {
                         width=10,
@@ -424,7 +426,11 @@ function MainUI:init()
                                 widget="Button",
                                 style={
                                     text="Play",colorButton=0xFF000099,colorButtonHovered=0xFF0000AA,colorButtonActive=0xFF000055
-                                }
+                                },
+                                onclicked = function(this)
+                                    self:setElementProperty("btnEffect","width",self:getElementProperty("btnEffect","width")+20)
+                                    self:setElementProperty("btnEffect","height",self:getElementProperty("btnEffect","height")+20)
+                                end
                             },
                             {
                                 id="btn2",
@@ -723,8 +729,50 @@ function MainUI:init()
     }
 end
 
-oo.class("RecordUI", Layout)
 
+oo.class("UserDelegateTest",Layout)
+function UserDelegateTest:init()
+self.ui={
+    id="rootDelegate",
+    flexDirection="row",
+    alignItems="center",
+    width="100%",
+    height=50,
+    elements={
+        {
+            widget="Text",
+            width=50,
+            height=50,
+            style={text=model.id}
+        },
+        {
+            widget="Image",
+            width=64,
+            height=64,
+            style={image="blueman-trust.png"}
+        },
+        {
+            width="auto",
+            height=1,
+            flexGrow=1,
+        },
+        {
+            widget="Button",
+            width="auto",
+            height=50,
+            style={text=self.model.name}
+        }
+    }
+}
+end
+
+function delegateOf(Object)
+    return function()
+        oo.new(Object)
+    end
+end
+
+oo.class("RecordUI", Layout)
 function RecordUI:init()
 self.ui={
     id="recorder",
@@ -733,6 +781,18 @@ self.ui={
 --    width="100%",
     width=720,
     height=1280,
+    elements={
+        {
+            widget="ListView",
+            widget=400,
+            height=400,
+            style={
+                --the model must set before ListView construct
+                model=testModel,
+                delegate=delegateOf(UserDelegateTest)
+            }
+        }
+    }
 }
 end
 

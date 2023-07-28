@@ -1,23 +1,15 @@
 #ifndef YOGALUALAYOUT_H
 #define YOGALUALAYOUT_H
-#include <string>
 #include <map>
-#include <variant>
-#include <vector>
 #include <functional>
 #include <sol/sol.hpp>
+#include "basic_types.h"
 class YGNode;
 class YogaElement;
 
-typedef std::variant<double,bool,std::string,std::vector<double>,std::vector<std::string>,void*> LuaCompatValue;
+
 typedef std::function<void(YogaElement&)> ElementOperator;
 
-#define kCompatValueNumberIndex 0
-#define kCompatValueBooleanIndex 1
-#define kCompatValueStringIndex 2
-#define kCompatValueNumberArrayIndex 3
-#define kCompatValueStringArrayIndex 4
-#define kCompatValuePointerIndex 5
 
 #define STYLE_VALUE_GETTER(MAP,TYPE,TYPE_DEFAULT,VAR_INDEX) \
 TYPE style_value(const std::string& name,TYPE_DEFAULT default_value,bool* exist = nullptr){ \
@@ -28,7 +20,7 @@ TYPE style_value(const std::string& name,TYPE_DEFAULT default_value,bool* exist 
     if(it->second.index() != VAR_INDEX) \
         return default_value; \
     if(exist) *exist = true; \
-    return std::get<TYPE>(it->second); \
+    return (TYPE)it->second; \
 }
 
 #define STYLE_VALUE_GETTER_REF(MAP,TYPE,TYPE_DEFAULT,VAR_INDEX) \
@@ -40,7 +32,7 @@ TYPE style_value(const std::string& name,const TYPE_DEFAULT& default_value,bool*
     if(it->second.index() != VAR_INDEX) \
         return default_value; \
     if(exist) *exist = true; \
-    return std::get<TYPE>(it->second); \
+    return (TYPE)it->second; \
 }
 
 #define STYLE_VALUE_GETTER_ALIAS(MAP,TYPE,TYPE_ALIAS,VAR_INDEX) \
@@ -52,7 +44,7 @@ TYPE_ALIAS style_value(const std::string& name,TYPE_ALIAS default_value,bool* ex
     if(it->second.index() != VAR_INDEX) \
         return default_value; \
     if(exist) *exist = true; \
-    return static_cast<TYPE_ALIAS>(std::get<TYPE>(it->second)); \
+    return static_cast<TYPE_ALIAS>((TYPE)it->second); \
 }
 
 #define LUA_PROPERTY_GET(TYPE,NAME,DEFAULT) \
@@ -66,7 +58,7 @@ TYPE get_##NAME() const { \
        (index == kCompatValueNumberArrayIndex    && type_info == typeid(std::vector<double>)) || \
        (index == kCompatValueStringArrayIndex    && type_info == typeid(std::vector<std::string>)) || \
        (index == kCompatValuePointerIndex        && type_info == typeid(void*)) ) \
-            v = std::get<TYPE>(value_); \
+            v = (TYPE)(value_); \
     return v; \
 }
 #define LUA_PROPERTY_SET(TYPE,NAME) \
@@ -150,7 +142,7 @@ public:
     void emit_event(const std::string& event);
 
     uint32_t style_color(const std::string& style,uint32_t defalt_value = 0xFF000000,bool* exist = nullptr);
-    uint32_t style_value_color(const LuaCompatValue& value, uint32_t defalt_value = 0xFF000000);
+    uint32_t style_value_color(const CompatValue& value, uint32_t defalt_value = 0xFF000000);
 public:
     static int32_t parse_node(sol::table& element_table, YGNode *node);
     static int32_t parse_widget(sol::table& element_table, YogaElement &element_self);
@@ -167,8 +159,8 @@ public:
     float       height_   = 0;
 
     std::vector<std::shared_ptr<YogaElement>>       children_;
-    std::unordered_map<std::string,LuaCompatValue>  styles_;
-    LuaCompatValue value_;
+    std::unordered_map<std::string,CompatValue>     styles_;
+    CompatValue value_;
 };
 
 class YogaLuaLayoutRenderer{

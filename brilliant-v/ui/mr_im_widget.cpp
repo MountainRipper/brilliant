@@ -340,24 +340,33 @@ void DragScrollCurrentWindow(bool& draged, int mouse_button, float release_speed
     }
 
     if(drag_info.last_delta_y != 0){
-        drag_info.last_delta_y *= decelerate_factor;
-        if(abs(drag_info.last_delta_y) < 1)
-            drag_info.last_delta_y = 0;
-        ImGui::SetScrollY(window, window->Scroll.y + drag_info.last_delta_y);
-
-        if(window->Scroll.y == 0 || window->Scroll.y >= window->ScrollMax.y || mouse_down){
-            drag_info.last_delta_y = 0;
-        }
+        do{
+            drag_info.last_delta_y *= decelerate_factor;
+            if( abs(drag_info.last_delta_y) < 1 ||
+                window->Scroll.y == 0 ||
+                window->Scroll.y >= window->ScrollMax.y ||
+                mouse_down ||
+                !scroll_y){
+                drag_info.last_delta_y = 0;
+                break;
+            }
+            ImGui::SetScrollY(window, window->Scroll.y + drag_info.last_delta_y);
+        }while(false);
     }
 
     if(drag_info.last_delta_x != 0){
-        drag_info.last_delta_x *= decelerate_factor;
-        if(abs(drag_info.last_delta_x) < 1)
-            drag_info.last_delta_x = 0;
-        ImGui::SetScrollX(window, window->Scroll.x + drag_info.last_delta_x);
-        if(window->Scroll.x == 0 || window->Scroll.x >= window->ScrollMax.x || mouse_down){
-            drag_info.last_delta_x = 0;
-        }
+        do{
+            drag_info.last_delta_x *= decelerate_factor;
+            if( abs(drag_info.last_delta_x) < 1 ||
+                window->Scroll.x == 0 ||
+                window->Scroll.x >= window->ScrollMax.x ||
+                mouse_down ||
+                !scroll_x){
+                drag_info.last_delta_x = 0;
+                break;
+            }
+            ImGui::SetScrollX(window, window->Scroll.x + drag_info.last_delta_x);
+        }while(false);
     }
     draged = drag_info.draged;
 }
