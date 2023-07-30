@@ -56,7 +56,7 @@ public:
     CompatValueTo(value_,bool,bool,kCompatValueBooleanIndex,0)
     CompatValueTo(value_,std::string,std::string,kCompatValueStringIndex,"")
     CompatValueTo(value_,std::vector<double>,std::vector<double>,kCompatValueNumberArrayIndex,{})
-    CompatValueTo(value_,std::vector<std::string>,std::vector<std::string>,kCompatValueNumberArrayIndex,{})
+    CompatValueTo(value_,std::vector<std::string>,std::vector<std::string>,kCompatValueStringArrayIndex,{})
     CompatValueTo(value_,void*,void*,kCompatValuePointerIndex,nullptr)
 
     CompatValueRef(value_,double,number)
@@ -68,28 +68,5 @@ public:
 
     CompatValueType value_;
 };
-
-#define GETTER_SETTER(TYPE,NAME) \
-TYPE NAME##_; \
-void set_##NAME( const TYPE& value ) { \
-    NAME##_ = value; \
-} \
-TYPE get_##NAME() const { \
-    return NAME##_; \
-}
-
-#define GETTER_SETTER_NO_REF(TYPE,NAME) \
-TYPE NAME##_; \
-void set_##NAME( TYPE value ) { \
-        NAME##_ = value; \
-} \
-TYPE get_##NAME() const { \
-    return NAME##_; \
-}
-
-#define GETTER_RETURN(DATA,NAME,KEY) \
-if(KEY == #NAME)\
-    return DATA.get_##NAME();
-
 
 #endif // BASIC_TYPES_H

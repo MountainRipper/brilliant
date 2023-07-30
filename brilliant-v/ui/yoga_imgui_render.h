@@ -1,7 +1,7 @@
 #ifndef IMGUIYOGARENDER_H
 #define IMGUIYOGARENDER_H
 #include "yoga_lua_layout.h"
-#include <imgui.h>
+#include "imgui_widget_mr.h"
 
 class ImGuiYogaRender : public YogaLuaLayoutRenderer
 {
@@ -24,6 +24,7 @@ public:
 private:
     StyleSetter default_push_setter_{&ImGui::PushStyleColor,&ImGui::PushStyleColor,&ImGui::PushStyleVar,&ImGui::PushStyleVar};
     bool theme_loaded_ = false;
+    std::map<YogaElement*,std::shared_ptr<mrui::ListView>> listviews_;
 };
 
 #endif // IMGUIYOGARENDER_H

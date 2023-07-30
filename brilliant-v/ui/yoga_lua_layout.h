@@ -91,11 +91,12 @@ protected:
     ~noncopyable() = default;
 };
 
+class YogaLuaLayout;
 //YogaElement's lua var hold a native context, in constructor
 //so multi instance will not allowed,the lua var do not known which native object to use
 class YogaElement : noncopyable{
 public:
-    YogaElement(sol::table &lua_var);
+    YogaElement(sol::table &lua_var,YogaLuaLayout* root_layout);
     int32_t push_element(std::shared_ptr<YogaElement> element);
     int32_t parse_self_class();
     int32_t parse_self_layout();
@@ -148,6 +149,7 @@ public:
     static int32_t parse_widget(sol::table& element_table, YogaElement &element_self);
 
 public:
+    YogaLuaLayout* layout_ = nullptr;
     YGNode*     node_   = 0;
     sol::table  lua_var_;
 

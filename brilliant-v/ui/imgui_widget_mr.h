@@ -12,7 +12,6 @@
 #if defined(MR_UI_WITH_TIO)
 #include <tio/tio_types.h>
 #endif
-
 #include "basic_types.h"
 
 namespace mrui
@@ -170,18 +169,16 @@ public:
         size_t count(){
             return count_imp();
         }
-
         std::vector<std::string> keys(){
             return keys_imp();
         }
-
         CompatValue value(size_t index,const std::string_view& key){
             return value_imp(index,key);
         }
-
         void erase(size_t index){
             erase_imp(index);
         }
+
         virtual int count_imp(){
             return 0;
         }
@@ -193,7 +190,6 @@ public:
             return value;
         }
         virtual void erase_imp(size_t index){
-
         }
     };
     //drawer callback function , return actual height the item used
@@ -206,14 +202,18 @@ public:
 
     int32_t draw(AbstractModel* model, draw_callback drawer,int32_t width,int32_t height,int32_t item_height,int32_t space = 0)
     {
+        //ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,ImVec2(4,4));
         ImGui::BeginChild(id_.c_str(),ImVec2(width,height),true);
-        size_t count = model->count();
-        int x = 0, y = 0;
-        for(size_t index = 0; index < count; index++){
-            y += drawer(*this,model,index,x,y,width,item_height);
+        if(model){
+            size_t count = model->count();
+            int x = 0, y = 0;
+            for(size_t index = 0; index < count; index++){
+                y += drawer(*this,model,index,x,y,width,item_height);
+            }
+            DragScrollCurrentWindow(draded_);
         }
-        DragScrollCurrentWindow(draded_);
         ImGui::EndChild();
+        //ImGui::PopStyleVar();
         return 0;
     }
 
@@ -226,8 +226,6 @@ public:
     bool draded_ = false;
 private:
     std::string id_;
-    int32_t width_;
-    int32_t height_;
 };
 
 

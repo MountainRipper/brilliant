@@ -793,12 +793,14 @@ self.ui={
     elements={
         {
             widget="ListView",
-            widget=400,
+            width=400,
             height=400,
+
             style={
                 --the model must set before ListView construct
                 model=testModel,
-                delegate=delegateOf(UserDelegateTest)
+                itemHeight=50,
+                --delegate=delegateOf(UserDelegateTest)
             }
         }
     }

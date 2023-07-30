@@ -1,13 +1,13 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "mr_im_widget.h"
 #include <imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <filesystem>
 #include <mrcommon/logger.h>
 #include <mrcommon/filesystem.h>
 #include <sol/sol.hpp>
-#include "imgui_yoga_render.h"
+#include "yoga_imgui_render.h"
+#include "imgui_widget_mr.h"
 
 const ImGuiID kStateIdDragScrolling = 100001;
 
@@ -256,10 +256,29 @@ int32_t ImGuiYogaRender::on_render_elements(YogaElement &element)
         }
     }
     else if(element.widget_ == "ListView"){
-        if(element.value_.index() != kCompatValuePointerIndex){
+        bool exist = false;
+        void* pointer = element.style_value("model",(void*)(nullptr),&exist);
+        mrui::ListView::AbstractModel* model = static_cast<mrui::ListView::AbstractModel*>(pointer);
 
+        if(listviews_.find(&element) == listviews_.end()){
+            auto new_view = std::make_shared<mrui::ListView>();
+            listviews_[&element] = new_view;
         }
-
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,ImVec2(8,8));
+        float item_height = element.style_value("itemHeight",20,&exist);
+        std::shared_ptr<mrui::ListView> list_view = listviews_[&element];
+        list_view->draw(model,[](mrui::ListView& view,mrui::ListView::AbstractModel* model,int index,int x,int y,int width,int height) ->int32_t{
+                ImGui::SetCursorPos(ImVec2(x+8,y));
+                mrui::Rectangle(ImVec2(width-16,height-1),0xFF6600FF,8);
+                std::string name = model->value(index,"name");
+                ImGui::Text("%s",name.c_str());
+                return  height;
+            },
+            element.width_,
+            element.height_,
+            item_height,
+            0);
+        ImGui::PopStyleVar();
     }
 
 
@@ -358,7 +377,7 @@ int32_t ImGuiYogaRender::load_theme(const std::string &theme_name)
         lua.safe_script_file(theme_file);
         sol::optional<sol::table> theme_opt = lua[theme_name];
         if(theme_opt != sol::nullopt){
-            YogaElement fake_theme_elemen(theme_opt.value());
+            YogaElement fake_theme_elemen(theme_opt.value(),nullptr);
             StyleSetter theme_setter;
             theme_setter.color_setter_uint32 = [](ImGuiCol idx, ImU32 col){
                 ImGui::GetStyle().Colors[idx] = ImGui::ColorConvertU32ToFloat4(col);

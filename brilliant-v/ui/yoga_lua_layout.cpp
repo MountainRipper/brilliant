@@ -184,8 +184,9 @@ inline T MAP_GET_VALUE(const std::map<K,T>& the_map ,const K& key,T default_valu
 }
 
 
-YogaElement::YogaElement(sol::table& lua_var)
+YogaElement::YogaElement(sol::table& lua_var, YogaLuaLayout *root_layout)
     :lua_var_(lua_var)
+    ,layout_(root_layout)
 {
     node_ = YGNodeNew();
     parse_self_class();
@@ -310,6 +311,7 @@ uint32_t YogaElement::style_value_color(const CompatValue &value,uint32_t defalt
 
 int32_t YogaElement::parse_widget(sol::table &element_table, YogaElement &element_self)
 {
+    auto t = element_table["widget"].get_type();
     sol::optional<std::string> widget_opt = element_table["widget"];
     if( widget_opt != sol::nullopt ){
         element_self.widget_ = widget_opt.value();
@@ -330,8 +332,8 @@ int32_t YogaElement::parse_widget(sol::table &element_table, YogaElement &elemen
         element_self.id_ = id_opt.value();
     }
 
-    if(element_self.widget_ == "TextInput"){
-
+    if(element_self.widget_ == "Text"){
+        //need calc text width
     }
     return 0;
 }
@@ -414,7 +416,7 @@ int32_t YogaElement::parse_node(sol::table &element_table, YGNode* node)
 
 
 YogaLuaLayout::YogaLuaLayout(sol::table &lua_object,sol::table &lua_ui)
-    :YogaElement(lua_ui)
+    :YogaElement(lua_ui,this)
     ,object_(lua_object)
 {
     auto a = lua_object["ui"].get<sol::table>();
@@ -452,7 +454,7 @@ int32_t YogaLuaLayout::parse_child_element_recursion()
     children_.clear();
 
     std::function<int32_t(sol::table &,YogaElement&)> element_parser;
-    element_parser = [&element_parser](sol::table &widget_table,YogaElement& element_self) ->int32_t{
+    element_parser = [&element_parser, this](sol::table &widget_table,YogaElement& element_self) ->int32_t{
         sol::optional<sol::table> elements = widget_table["elements"];
         if(elements != sol::nullopt){
 
@@ -461,7 +463,7 @@ int32_t YogaLuaLayout::parse_child_element_recursion()
                 auto type = element.value().get_type();
                 if(type ==sol::type::table){
                     sol::table element_table = element.as<sol::table>();
-                    auto element_child = std::make_shared<YogaElement>(element_table);
+                    auto element_child = std::make_shared<YogaElement>(element_table,this);
                     element_parser(element_table,*element_child);
 
                     element_self.push_element(element_child);

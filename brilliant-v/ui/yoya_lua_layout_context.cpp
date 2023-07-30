@@ -30,6 +30,7 @@ function createWidget(name)
 end
 )";
 
+#include "yoga_imgui_widget.h"
 
 YogaLuaLayoutContext::YogaLuaLayoutContext()
 {
@@ -47,13 +48,13 @@ int32_t YogaLuaLayoutContext::load(const std::string &ui_script, int32_t screen_
         (*lua_)["screenWidth"] = screen_width;
         (*lua_)["screenHeight"] = screen_height;
         lua_->new_usertype<YogaElement>( "YogaElement",
-                                "number",  sol::property(&YogaElement::get_number, &YogaElement::set_number),
-                                "boolean", sol::property(&YogaElement::get_boolean, &YogaElement::set_boolean),
-                                "string",  sol::property(&YogaElement::get_string, &YogaElement::set_string),
-                                "number_array", sol::property(&YogaElement::get_number_array, &YogaElement::set_number_array),
-                                "string_array", sol::property(&YogaElement::get_string_array, &YogaElement::set_string_array),
-                                "pointer", sol::property(&YogaElement::get_pointer, &YogaElement::set_pointer)
-                                 );
+                                SOL_PPROPERTY(YogaElement,number),
+                                SOL_PPROPERTY(YogaElement,boolean),
+                                SOL_PPROPERTY(YogaElement,string),
+                                SOL_PPROPERTY(YogaElement,number_array),
+                                SOL_PPROPERTY(YogaElement,string_array),
+                                SOL_PPROPERTY(YogaElement,pointer)
+                                );
 
 
         lua_->safe_script(init_script);

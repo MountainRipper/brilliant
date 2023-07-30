@@ -1,13 +1,12 @@
 #ifndef PLAYEREXAMPLE_H
 #define PLAYEREXAMPLE_H
-#include "brilliant-v/ui/mr_im_widget.h"
 #include <tio/tio_types.h>
 #include <mutex>
 #include <queue>
 #include <mrcommon/sdl_runner.h>
-#include <mr_im_widget.h>
 #include <yoya_lua_layout_context.h>
-#include <imgui_yoga_render.h>
+#include <yoga_imgui_render.h>
+#include <imgui_widget_mr.h>
 using namespace mr;
 
 class MrUIExample : public SDLShowcaseBase
