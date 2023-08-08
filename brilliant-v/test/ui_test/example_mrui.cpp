@@ -21,14 +21,6 @@ MR_MR_SDL_RUNNER_SHOWCASE(MrUIExample)
 
 using namespace mr::tio;
 
-typedef std::function<CompatValue()> FuncCompatGetter;
-typedef std::function<void(CompatValue&)> FuncCompatSetter;
-struct P_E{
-    std::string name_;
-    FuncCompatGetter getter_;
-    FuncCompatSetter setter_;
-};
-
 class TestModelData{
 public:
     COMMON_PROPERTIES(double,id,std::string,name)
@@ -70,7 +62,6 @@ int32_t MrUIExample::on_init(void *window,int width, int height)
                                   "Đoàn Diệu","संसाधन ओओर","Надежда Владимиров","张三","李四","蔡徐坤","鸡你太美"};
 
     for (int index = 0; index < 128; ++index) {
-
         TestModelData data{(double)index,names[index%names.size()]};
         test_model_.append(data);
     }
@@ -82,7 +73,6 @@ int32_t MrUIExample::on_init(void *window,int width, int height)
     icons_config.MergeMode = true;
     static const ImWchar ranges[] = { 0x0001, 0xFFFF, 0 };
     fonts->AddFontFromMemoryCompressedBase85TTF(notosans_compressed_data_base85,24,&icons_config,ranges);
-
 
     std::filesystem::path current_file(__FILE__);
     yoga_layout_context_.load((current_file.parent_path()/"resources"/"main.lua").string(),mode.w,mode.h);
