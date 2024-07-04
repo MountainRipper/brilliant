@@ -28,8 +28,6 @@ TYPE get_##NAME() const { \
 #define COMPAT_PROPERTY_CASE(NAME)\
         if(key == #NAME) return NAME##_;
 
-#define CONCAT_HELPER(a,b) &##a##::get_##b
-#define CONCAT_HELPER2(a,b) &##a##::set_##b
 #define SOL_PPROPERTY(CLASS,NAME) #NAME,sol::property(&CLASS::get_##NAME, &CLASS::set_##NAME)
 #define SOL_PPROPERTY_THIS_CLASS(NAME) #NAME,sol::property(&ThisClass::get_##NAME, &ThisClass::set_##NAME)
 

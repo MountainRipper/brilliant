@@ -11,13 +11,19 @@
 #include <mrcommon/filesystem.h>
 #include "yoga_imgui_widget.h"
 #include "example_mrui.h"
+#include <stdio.h>
+#include <mrcommon/logger.h>
 
-
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
 /*
  *Yoga :
  *Justify Content: hor layout for child
  */
 MR_MR_SDL_RUNNER_SHOWCASE(MrUIExample)
+
+#define PRINT__(CLS,NAME) CLS int_##NAME = NAME;
 
 using namespace mr::tio;
 
@@ -31,7 +37,6 @@ TypedListModel<TestModelData> test_model_;
 
 MrUIExample::MrUIExample()
 {
-
 }
 
 
@@ -122,6 +127,11 @@ void MrUIExample::cursor_callback(double x, double y)
 }
 
 void MrUIExample::key_callback(int key, int type, int scancode, int mods)
+{
+
+}
+
+void MrUIExample::char_callback(const char *key, int type)
 {
 
 }
