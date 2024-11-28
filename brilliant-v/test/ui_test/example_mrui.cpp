@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <mrcommon/logger.h>
 
-#define STB_IMAGE_IMPLEMENTATION
+// #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 #include <stb/stb_image_write.h>
 /*
@@ -131,10 +131,6 @@ void MrUIExample::key_callback(int key, int type, int scancode, int mods)
 
 }
 
-void MrUIExample::char_callback(const char *key, int type)
-{
-
-}
 
 void MrUIExample::error_callback(int err, const char *desc)
 {

@@ -11,9 +11,9 @@ target_include_directories(mrui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(mrui PRIVATE -DMR_UI_WITH_TIO=1)
 
 if(${MR_TARGET_OS} MATCHES "linux")
-    target_link_libraries(mrui PRIVATE textureio mrcommon SDL2)
+    target_link_libraries(mrui PRIVATE imgui_stb textureio mrcommon  SDL2)
 elseif(${MR_TARGET_OS} MATCHES "windows")
-    target_link_libraries(mrui PRIVATE textureio mrcommon dwmapi)
+    target_link_libraries(mrui PRIVATE imgui_stb textureio mrcommon dwmapi)
 elseif(${MR_TARGET_OS} MATCHES "darwin")
 
 elseif(${MR_TARGET_OS} MATCHES "android")
