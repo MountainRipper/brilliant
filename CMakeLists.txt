@@ -41,6 +41,8 @@ elseif(${MR_TARGET_OS} MATCHES "windows")
     endif()
 elseif(${MR_TARGET_OS} MATCHES "darwin")
     set(MR_COMPILER_VER "clang")
+    include_directories( /opt/homebrew/include)
+    link_directories( /opt/homebrew/lib)
 elseif(${MR_TARGET_OS} MATCHES "android")
 
 elseif(${MR_TARGET_OS} MATCHES "ios")
