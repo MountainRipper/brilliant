@@ -40,7 +40,7 @@ elseif(${MR_TARGET_OS} MATCHES "windows")
         endif()
     endif()
 elseif(${MR_TARGET_OS} MATCHES "darwin")
-
+    set(MR_COMPILER_VER "clang")
 elseif(${MR_TARGET_OS} MATCHES "android")
 
 elseif(${MR_TARGET_OS} MATCHES "ios")
