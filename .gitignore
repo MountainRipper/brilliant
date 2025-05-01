@@ -31,6 +31,8 @@
 *.out
 *.app
 
-build*
+*build*
 *.user
 
+.DS_Store
+.idea
